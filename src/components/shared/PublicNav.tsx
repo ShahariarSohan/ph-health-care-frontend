@@ -45,7 +45,7 @@ export const PublicNav = () => {
                 aria-label="home"
                 className="flex items-center space-x-2"
               >
-                <h1 className="text-primary font-bold text-2xl">PH Health</h1>
+                <h1 className="text-primary font-bold text-2xl">PH Health Care</h1>
               </Link>
 
               <button

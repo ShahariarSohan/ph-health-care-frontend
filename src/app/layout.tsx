@@ -13,8 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Ph-health-care",
-  description:"A health care application built with next js",
+  title: "Ph Health Care",
+  description:
+    "Your health is our priority. Experience top-notch medical services with PH Health Care.",
 };
 
 export default function RootLayout({
