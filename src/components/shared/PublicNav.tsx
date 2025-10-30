@@ -13,7 +13,6 @@ const menuItems = [
   { name: "Consultation", href: "/consultation" },
   { name: "Health Plans", href: "/health-plans" },
   { name: "Diagnostics", href: "diagnostics" },
-  { name: "NGOs", href: "/ngos" },
 ];
 const { user } = await checkAuthStatus();
 const { role } = user || { role: UserRole.GUEST };
