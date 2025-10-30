@@ -5,15 +5,20 @@ import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import React from "react";
 import { cn } from "@/lib/utils";
+import checkAuthStatus from "@/utility/checkAuthStatus";
+import { UserRole } from "@/types/role";
 
 const menuItems = [
   { name: "Home", href: "/" },
   { name: "Consultation", href: "/consultation" },
   { name: "Health Plans", href: "/health-plans" },
   { name: "Diagnostics", href: "diagnostics" },
-  { name: "NGOs", href: "/ngos" },
 ];
-
+const { user } = await checkAuthStatus();
+const { role } = user || { role: UserRole.GUEST };
+if (role === UserRole.ADMIN) {
+  menuItems.push({ name: "Admin Dashboard", href: "/dashboard/admin" });
+}
 export const PublicNav = () => {
   const [menuState, setMenuState] = React.useState(false);
   const [isScrolled, setIsScrolled] = React.useState(false);
@@ -45,7 +50,9 @@ export const PublicNav = () => {
                 aria-label="home"
                 className="flex items-center space-x-2"
               >
-                <h1 className="text-primary font-bold text-2xl">PH Health</h1>
+                <h1 className="text-primary font-bold text-2xl">
+                  PH Health Care
+                </h1>
               </Link>
 
               <button
@@ -89,16 +96,20 @@ export const PublicNav = () => {
                 </ul>
               </div>
               <div className="flex w-full flex-col space-y-3 sm:flex-row sm:gap-3 sm:space-y-0 md:w-fit">
-               
-                <Button
-                  asChild
-                  className={cn(isScrolled && "lg:hidden")}
-                >
-                  <Link href="/login">
-                    <span>Login</span>
-                  </Link>
-                </Button>
-               
+                {role !== UserRole.GUEST ? (
+                  <Button
+                    asChild
+                    className={cn(isScrolled ? "lg:hidden bg-red-600":" bg-red-600")}
+                  >
+                    <span>Logout</span>
+                  </Button>
+                ) : (
+                  <Button asChild className={cn(isScrolled && "lg:hidden")}>
+                    <Link href="/login">
+                      <span>Login</span>
+                    </Link>
+                  </Button>
+                )}
               </div>
             </div>
           </div>

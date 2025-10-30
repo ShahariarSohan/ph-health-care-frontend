@@ -7,9 +7,9 @@ export default function CommonLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div>
+    <>
       <PublicNav></PublicNav>
-      {children}
-    </div>
+      <>{children}</>
+    </>
   );
 }
