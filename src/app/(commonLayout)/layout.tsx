@@ -9,7 +9,7 @@ export default function CommonLayout({
   return (
     <>
       <PublicNav></PublicNav>
-      <div>{children}</div>
+      <>{children}</>
     </>
   );
 }

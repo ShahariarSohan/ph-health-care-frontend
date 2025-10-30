@@ -8,14 +8,14 @@ import { heroSectionProps } from "@/props/heroSectionProps";
 export default function Home() {
   return (
     <>
-      <head>
+      <header>
         <title>PH Health Care</title>
         <meta
           name="description"
           content="Your health is our priority. Experience top-notch medical services with PH Health Care."
         />
         <link rel="icon" href="/favicon.ico" />
-      </head>
+      </header>
       <main>
         <HeroSection {...heroSectionProps}></HeroSection>
         <FeaturedDoctors></FeaturedDoctors>
