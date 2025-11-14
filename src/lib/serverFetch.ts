@@ -23,7 +23,7 @@ export const serverFetchHelper = async (
 export const serverFetch =  {
     get: async (
         endpoint: string,
-        options: RequestInit
+        options?: RequestInit
     ): Promise<Response> => serverFetchHelper(endpoint, { ...options, method: "GET" }),
     post: async (
         endpoint: string,
@@ -39,6 +39,6 @@ export const serverFetch =  {
     ): Promise<Response> => serverFetchHelper(endpoint, { ...options, method: "PUT" }),
     delete: async (
         endpoint: string,
-        options: RequestInit
+        options?: RequestInit
     ): Promise<Response> => serverFetchHelper(endpoint, { ...options, method: "DELETE" })
 }
