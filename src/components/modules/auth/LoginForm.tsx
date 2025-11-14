@@ -1,6 +1,7 @@
 /* eslint-disable react/no-unescaped-entities */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
+import InputFieldError from "@/components/shared/InputFieldError";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -9,6 +10,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+
 import loginUser from "@/services/auth/loginUser";
 import Link from "next/link";
 import { useActionState, useEffect } from "react";
@@ -16,17 +18,8 @@ import { toast } from "sonner";
 
 export default function LoginForm({redirect}:{redirect?:string}) {
   const [state, formAction, isPending] = useActionState(loginUser, null);
-  console.log(state)
-  const getFieldError = (field:string) => {
-    if (state && state.errors) {
-      const error = state.errors.find((err:any) => err.field === field);
-      if (error) {
-        return error.message;
-      }
-    } else {
-      return null
-    }
-  };
+  console.log("loginState",state)
+  
   useEffect(() => {
     if (state && !state.success && state.message) {
       toast.error(state.message)
@@ -46,21 +39,13 @@ export default function LoginForm({redirect}:{redirect?:string}) {
               placeholder="m@example.com"
               required
             />
-            {getFieldError("email") && (
-              <FieldDescription className="text-red-600">
-                {getFieldError("email")}
-              </FieldDescription>
-            )}
+            <InputFieldError field="email" state={state}></InputFieldError>
           </Field>
 
           <Field>
             <FieldLabel htmlFor="password">Password</FieldLabel>
             <Input id="password" type="password" name="password" required  />
-            {getFieldError("password") && (
-              <FieldDescription className="text-red-600">
-                {getFieldError("password")}
-              </FieldDescription>
-            )}
+            <InputFieldError field="password" state={state}></InputFieldError>
           </Field>
           <FieldGroup>
             <Field>

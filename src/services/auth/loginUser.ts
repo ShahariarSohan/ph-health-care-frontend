@@ -2,52 +2,43 @@
 
 "use server";
 
-import z from "zod";
+
 import { parse } from "cookie";
 
 import { redirect } from "next/navigation";
 import { JwtPayload } from "jsonwebtoken";
-import jwt from "jsonwebtoken"
-import { getDefaultDashboardRoute, validRedirectForRole } from "@/lib/auth.util";
+import jwt from "jsonwebtoken";
+import {
+  getDefaultDashboardRoute,
+  validRedirectForRole,
+} from "@/lib/auth.util";
 import { setCookie } from "./tokenHandlers";
+import { serverFetch } from "@/lib/serverFetch";
+import zodValidator from "@/lib/zodValidator";
+import { loginValidationSchema } from "@/zod/auth.validation";
 
-const loginValidationSchema = z.object({
-  email: z.email("Invalid email address"),
-  password: z
-    .string()
-    .min(5, " Password is required and must be at least 5 characters")
-    .max(100, "Password must not be more than 100 characters"),
-});
+
+
 const loginUser = async (_currentState: any, formData: any) => {
   try {
     const redirectTo = formData.get("redirect") || null;
     let accessTokenObject: null | any = null;
     let refreshTokenObject: null | any = null;
-    const loginData = {
+    const payload = {
       email: formData.get("email"),
       password: formData.get("password"),
     };
-    const validatedFields = loginValidationSchema.safeParse(loginData);
-
-    if (!validatedFields.success) {
-      return {
-        success: false,
-        errors: validatedFields.error.issues.map((issue) => {
-          return {
-            field: issue.path[0],
-            message: issue.message,
-          };
-        }),
-      };
+    if (zodValidator(payload, loginValidationSchema).success === false) {
+      return zodValidator(payload, loginValidationSchema);
     }
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
-      method: "POST",
+    const validatedPayload = zodValidator(payload, loginValidationSchema).data;
+    const res = await serverFetch.post(`/auth/login`, {
+      body: JSON.stringify(validatedPayload),
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(loginData),
     });
-    const result=await res.json()
+    const result = await res.json();
     const setCookieHeaders = res.headers.getSetCookie();
     if (setCookieHeaders && setCookieHeaders.length > 0) {
       setCookieHeaders.forEach((cookie) => {
@@ -66,7 +57,7 @@ const loginUser = async (_currentState: any, formData: any) => {
     if (!refreshTokenObject) {
       throw new Error("No token received");
     }
-   
+
     await setCookie("accessToken", accessTokenObject.accessToken, {
       httpOnly: true,
       secure: true,
@@ -82,36 +73,41 @@ const loginUser = async (_currentState: any, formData: any) => {
       path: refreshTokenObject.path || "/",
       sameSite: refreshTokenObject.SameSite || "none",
     });
-    
-    const verifiedToken: JwtPayload|string = jwt.verify(accessTokenObject.accessToken, process.env.ACCESS_TOKEN_SECRET as string)
+
+    const verifiedToken: JwtPayload | string = jwt.verify(
+      accessTokenObject.accessToken,
+      process.env.ACCESS_TOKEN_SECRET as string
+    );
     if (typeof verifiedToken === "string") {
-      throw new Error("You are not verified")
+      throw new Error("You are not verified");
     }
-    const userRole: any = verifiedToken.role
-    
+    const userRole: any = verifiedToken.role;
+
     if (!result.success) {
-      throw new Error(result.message||"Login failed")
+      throw new Error(result.message || "Login failed");
     }
-    
+
     if (redirectTo) {
-      
       const redirectPath = redirectTo.toString();
       if (validRedirectForRole(redirectPath, userRole)) {
-        redirect(`${redirectPath}?loggedIn=true`)
-      }
-      else {
-        redirect(`${getDefaultDashboardRoute(userRole)}?loggedIn=true`)
+        redirect(`${redirectPath}?loggedIn=true`);
+      } else {
+        redirect(`${getDefaultDashboardRoute(userRole)}?loggedIn=true`);
       }
     } else {
       redirect(`${getDefaultDashboardRoute(userRole)}?loggedIn=true`);
-   }
-   
-  } catch (err:any) {
+    }
+  } catch (err: any) {
     console.log(err);
     if (err?.digest?.startsWith("NEXT_REDIRECT")) {
       throw err;
     }
-    return { success: false, message:`${process.env.NODE_ENV==="development"?err.message:"Login failed"}` };
+    return {
+      success: false,
+      message: `${
+        process.env.NODE_ENV === "development" ? err.message : "Login failed"
+      }`,
+    };
   }
 };
 
