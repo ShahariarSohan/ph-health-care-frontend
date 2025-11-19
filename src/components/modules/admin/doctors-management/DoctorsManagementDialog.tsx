@@ -17,11 +17,9 @@ import {
 } from "@/components/ui/select";
 import { createDoctor, updateDoctor } from "@/services/admin/doctorManagement";
 import { IDoctor } from "@/types/doctor.interface";
-import { ISpecialty } from "@/types/specialties.interface";
+import { ISpecialty } from "@/types/specialty.interface";
 import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
-
-
 
 interface IDoctorManagementDialogProps {
   open: boolean;
@@ -37,20 +35,24 @@ export default function DoctorsManagementDialog({
   doctor,
   specialties,
 }: IDoctorManagementDialogProps) {
-    const isEdit = !!doctor;
-    const [selectedSpecialty, setSelectedSpecialty] = useState<string>("")
-    const [gender,setGender]=useState<"MALE"|"FEMALE">(doctor?.gender||"MALE")
-    const [state, formAction, isPending] = useActionState(isEdit ? updateDoctor.bind(null,doctor.id!) : createDoctor, null)
-    useEffect(() => {
-        if (state && state.success) {
-            toast.success(state.message || "update or created doctor successful")
-            onSuccess()
-            onClose()
-        }
-        else if(state&&!state.success) {
-            toast.error(state.message)
-        }
-    },[state,onSuccess,onClose])
+  const isEdit = !!doctor;
+  const [selectedSpecialty, setSelectedSpecialty] = useState<string>("");
+  const [gender, setGender] = useState<"MALE" | "FEMALE">(
+    doctor?.gender || "MALE"
+  );
+  const [state, formAction, isPending] = useActionState(
+    isEdit ? updateDoctor.bind(null, doctor.id!) : createDoctor,
+    null
+  );
+  useEffect(() => {
+    if (state && state.success) {
+      toast.success(state.message || "update or created doctor successful");
+      onSuccess();
+      onClose();
+    } else if (state && !state.success) {
+      toast.error(state.message);
+    }
+  }, [state, onSuccess, onClose]);
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-h-[90vh] flex flex-col p-0">

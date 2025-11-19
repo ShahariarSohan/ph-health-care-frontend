@@ -3,7 +3,7 @@
 import DeleteConfirmationDialog from "@/components/shared/DeleteConfirmationDialog";
 import ManagementTable from "@/components/shared/ManagementTable";
 import { doctorsColumns } from "./DoctorsColumn";
-import { ISpecialty } from "@/types/specialties.interface";
+import { ISpecialty } from "@/types/specialty.interface";
 import { IDoctor } from "@/types/doctor.interface";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -71,7 +71,7 @@ export default function DoctorsTable({
         doctor={editDoctor!}
         onSuccess={() => {
           setEditDoctor(null);
-          handleRefresh()
+          handleRefresh();
         }}
         specialties={specialties}
       />

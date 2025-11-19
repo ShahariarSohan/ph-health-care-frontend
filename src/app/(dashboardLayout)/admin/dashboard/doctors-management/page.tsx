@@ -9,8 +9,8 @@ import { TableSkeleton } from "@/components/shared/TableSkeleton";
 import { queryStringFormatter } from "@/lib/formatters";
 import { getDoctors } from "@/services/admin/doctorManagement";
 
-import { getSpecialties } from "@/services/admin/specialtiesManagement";
-import { ISpecialty } from "@/types/specialties.interface";
+import { getSpecialties } from "@/services/admin/specialtyManagement";
+import { ISpecialty } from "@/types/specialty.interface";
 import { Suspense } from "react";
 
 export default async function DoctorsManagementPage({
@@ -46,7 +46,10 @@ export default async function DoctorsManagementPage({
         <RefreshButton></RefreshButton>
       </div>
       <Suspense fallback={<TableSkeleton columns={10} rows={5} />}>
-        <DoctorsTable doctors={doctors?.data?.data} specialties={specialtiesResult?.data}></DoctorsTable>
+        <DoctorsTable
+          doctors={doctors?.data?.data}
+          specialties={specialtiesResult?.data}
+        ></DoctorsTable>
       </Suspense>
       <TablePagination
         currentPage={currentPage}

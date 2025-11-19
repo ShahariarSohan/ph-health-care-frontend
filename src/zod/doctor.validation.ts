@@ -1,7 +1,7 @@
 import z from "zod";
 
 export const createDoctorZodSchema = z.object({
-  password: z.string().min(6, "Password must be at least 6 characters long"),
+  password: z.string().min(5, "Password must be at least 5 characters long"),
   name: z.string().min(3, "Name must be at least 3 characters long"),
   email: z.email("Invalid email address"),
   contactNumber: z

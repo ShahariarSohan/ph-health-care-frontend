@@ -1,5 +1,5 @@
 import { IColumn } from "@/components/shared/ManagementTable";
-import { ISpecialty } from "@/types/specialties.interface";
+import { ISpecialty } from "@/types/specialty.interface";
 import Image from "next/image";
 
 export const specialtiesColumns: IColumn<ISpecialty>[] = [
@@ -14,9 +14,9 @@ export const specialtiesColumns: IColumn<ISpecialty>[] = [
         className="rounded-full"
       ></Image>
     ),
-    },
-    {
-        header: "Title",
-        accessor:(specialty)=>specialty.title
-    }
+  },
+  {
+    header: "Title",
+    accessor: (specialty) => specialty.title,
+  },
 ];
