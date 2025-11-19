@@ -1,3 +1,4 @@
+"use client"
 import { useRouter, useSearchParams } from "next/navigation";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { useTransition } from "react";
@@ -10,10 +11,10 @@ export default function SelectFilter({ paramName, placeholder, options }: ISelec
     const router = useRouter();
     const searchParams = useSearchParams();
     const [isPending, startTransition] = useTransition()
-    const currentValue = searchParams.get(paramName) || "all"
+    const currentValue = searchParams.get(paramName) || "All"
     const handleChange = (value:string) => {
         const params = new URLSearchParams(searchParams.toString())
-        if (value === "all") {
+        if (value === "All") {
             params.delete(paramName)
         }
         else if (value) {
@@ -38,8 +39,8 @@ export default function SelectFilter({ paramName, placeholder, options }: ISelec
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="All">All</SelectItem>
-        {options.map((option) => (
-          <SelectItem key={option.value} value={option.value}>
+        {options?.map((option) => (
+          <SelectItem key={option.value} value={option.label}>
             {option.label}
           </SelectItem>
         ))}

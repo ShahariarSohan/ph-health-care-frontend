@@ -8,7 +8,7 @@ const useDebounce = <T>(value:T,delay:number=500):T => {
     useEffect(()=>{
         const handler = setTimeout(() => {
             setDebouncedValue(value)
-        })
+        },delay)
         return ()=>clearTimeout(handler)
     },[value,delay])
     

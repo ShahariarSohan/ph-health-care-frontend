@@ -17,10 +17,9 @@ import { toast } from "sonner";
 
 export default function RegisterForm() {
   const [state, formAction, isPending] = useActionState(registerPatient, null);
-  console.log("registerState", state);
 
   useEffect(() => {
-    if (state && !state.success && state.message) {
+    if (state && !state.success) {
       toast.error(state.message);
     }
   }, [state]);

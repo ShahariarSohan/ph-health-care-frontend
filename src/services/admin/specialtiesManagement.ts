@@ -10,7 +10,8 @@ import { createSpecialtyZodSchema } from "@/zod/specialty.validation";
 
 
 
-const createSpecialties = async (_preState: any, formData: FormData) => {
+export const createSpecialties = async (_preState: any, formData: FormData) => {
+  
     try {
         const payload = {
             title: formData.get("title") as string
@@ -22,7 +23,10 @@ const createSpecialties = async (_preState: any, formData: FormData) => {
           const validatedPayload = zodValidator(
             payload,
             createSpecialtyZodSchema
-          ).data
+      ).data
+      if (!validatedPayload) {
+        throw new Error("Invalid payload");
+      }
         const newFormData = new FormData();
         newFormData.append("data", JSON.stringify(validatedPayload))
         if (formData.get("file")) {
@@ -31,7 +35,7 @@ const createSpecialties = async (_preState: any, formData: FormData) => {
         const res = await serverFetch.post("/specialties", {
             body:newFormData
         })
-        const result = await res.json()
+      const result = await res.json()
         return result;
     }
     catch (err: any) {
@@ -39,7 +43,7 @@ const createSpecialties = async (_preState: any, formData: FormData) => {
         return { success: false, message: `${process.env.NODE_ENV === "development" ? err.message : "Something went wrong"}` };
     }
 } 
-const getSpecialties = async () => { 
+export const getSpecialties = async () => { 
     try {
         const res = await serverFetch.get("/specialties");
         const result = await res.json();
@@ -58,7 +62,7 @@ const getSpecialties = async () => {
     
     
     };
-const deleteSpecialties = async (id: string) => { 
+export const deleteSpecialties = async (id: string) => { 
         try {
           const res = await serverFetch.delete(`/specialties/${id}`);
           const result = await res.json();
@@ -77,8 +81,3 @@ const deleteSpecialties = async (id: string) => {
     };
 
 
-export const specialtiesManagement = {
-    createSpecialties,
-    getSpecialties,
-    deleteSpecialties
-}

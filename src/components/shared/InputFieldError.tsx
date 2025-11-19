@@ -5,7 +5,6 @@ import { FieldDescription } from "../ui/field";
 interface IInputFieldError {
   field: string;
   state: IInputErrorState;
-    message?: string;
 }
 export default function InputFieldError({ field, state }: IInputFieldError) {
   if (getInputFieldError(field, state)) {
