@@ -1,12 +1,16 @@
-"use client"
+"use client";
 
 import InputFieldError from "@/components/shared/InputFieldError";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { createSpecialties } from "@/services/admin/specialtiesManagement";
-
+import { createSpecialties } from "@/services/admin/specialtyManagement";
 
 import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
@@ -22,18 +26,19 @@ export default function SpecialtiesManagementDialog({
   onClose,
   onSuccess,
 }: ISpecialtiesManagementDialogProps) {
-  const [state, formAction, isPending] = useActionState(createSpecialties, null)
+  const [state, formAction, isPending] = useActionState(
+    createSpecialties,
+    null
+  );
   useEffect(() => {
     if (state && state.success) {
-      toast.success(state.message)
-      onSuccess()
-      onClose()
+      toast.success(state.message);
+      onSuccess();
+      onClose();
+    } else if (state && !state.success) {
+      toast.error(state.message);
     }
-    else if (state && !state.success) {
-      toast.error(state.message)
-    }
-
-  },[state,onSuccess,onClose])
+  }, [state, onSuccess, onClose]);
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent>

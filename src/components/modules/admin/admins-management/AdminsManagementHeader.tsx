@@ -5,14 +5,11 @@ import { Plus } from "lucide-react";
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import DoctorsManagementDialog from "./DoctorsManagementDialog";
-import { ISpecialty } from "@/types/specialty.interface";
-interface IDoctorManagementHeaderProps {
-  specialties: ISpecialty[];
-}
-export default function DoctorsManagementHeader({
-  specialties,
-}: IDoctorManagementHeaderProps) {
+
+
+import AdminsManagementDialog from "./AdminsManagementDialog";
+
+export default function AdminsManagementHeader() {
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -23,18 +20,16 @@ export default function DoctorsManagementHeader({
   };
   return (
     <>
-      <DoctorsManagementDialog
+      <AdminsManagementDialog
         open={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
         onSuccess={handleSuccess}
-        specialties={specialties}
       />
-
       <ManagementPageHeader
-        title="Doctors Management"
-        description="Manage Doctors information and details"
+        title="Admins Management"
+        description="Manage Admins information and details"
         action={{
-          label: "Add Doctor",
+          label: "Add Admin",
           icon: Plus,
           onClick: () => setIsDialogOpen(true),
         }}
