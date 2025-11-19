@@ -28,7 +28,6 @@ export async function proxy(request: NextRequest) {
     }
     userRole = verifiedToken.role;
   }
-  console.log("userRole", userRole);
 
   const routeOwner = getRouteOwner(pathname);
   const isAuth = isAuthRoute(pathname);

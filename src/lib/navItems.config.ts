@@ -139,7 +139,7 @@ export const adminNavItems: INavSection[] = [
       },
       {
         title: "Specialties",
-        href: "/admin/dashboard/specialities-management",
+        href: "/admin/dashboard/specialties-management",
         icon: "Hospital", // ✅ String
         roles: [UserRole.ADMIN],
       },
