@@ -1,7 +1,16 @@
+"use client";
+
+import ManagementPageHeader from "@/components/shared/ManagementPageHeader";
+
+
 export default function PatientsManagementHeader() {
+ 
   return (
-    <div>
-      <h1>This is PatientsManagementHeader component</h1>
-    </div>
+    <>
+      <ManagementPageHeader
+        title="Patients Management"
+        description="Manage Patients information and details"
+      />
+    </>
   );
 }

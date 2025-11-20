@@ -1,8 +1,8 @@
 export interface IPatient {
-  id: string;
+  id?: string;
   name: string;
   email: string;
-  contactNumber: string;
+  contactNumber?: string;
   address: string;
   profilePhoto?: string;
   isDeleted: boolean;
