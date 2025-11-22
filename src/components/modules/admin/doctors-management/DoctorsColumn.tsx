@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 
@@ -15,28 +16,40 @@ export const doctorsColumns: IColumn<IDoctor>[] = [
       <UserInfoCell
         name={doctor.name}
         email={doctor.email}
-        photo={doctor.profilePhoto}
+        photo={doctor.profilePhoto as string}
       />
     ),
   },
   {
     header: "Specialties",
-    accessor: (doctor) => (
-      <div className="flex flex-wrap gap-1">
-        {doctor.doctorSpecialties && doctor.doctorSpecialties.length > 0 ? (
-          doctor.doctorSpecialties.map((specialty, index) => (
-            <span
-              key={specialty.specialties?.id || index}
-              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-            >
-              {specialty.specialties?.title || "N/A"}
-            </span>
-          ))
-        ) : (
-          <span className="text-xs text-gray-500">No specialties</span>
-        )}
-      </div>
-    ),
+    accessor: (doctor) => {
+      // Handle both possible response structures
+      const specialties: any = doctor.doctorSpecialties;
+
+      if (!specialties || specialties.length === 0) {
+        return <span className="text-xs text-gray-500">No specialties</span>;
+      }
+
+      return (
+        <div className="flex flex-wrap gap-1">
+          {specialties.map((item: any, index: any) => {
+            // Handle nested specialty object
+            const specialtyTitle = item.specialties?.title || "N/A";
+            const specialtyId =
+              item.specialties?.id || item.specialtiesId || index;
+
+            return (
+              <span
+                key={specialtyId}
+                className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
+              >
+                {specialtyTitle}
+              </span>
+            );
+          })}
+        </div>
+      );
+    },
   },
   {
     header: "Contact",

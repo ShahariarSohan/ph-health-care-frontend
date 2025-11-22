@@ -22,9 +22,9 @@ export default async function DoctorsManagementPage({
   const specialtiesResult = await getSpecialties();
   const doctors = await getDoctors(queryStringFormatter(searchParamsObj));
   const totalPages = Math.ceil(
-    doctors?.data?.meta?.total / doctors?.data?.meta?.limit
+    doctors?.meta?.total / doctors?.meta?.limit
   );
-  const currentPage = doctors?.data?.meta?.page;
+  const currentPage = doctors?.meta?.page;
   return (
     <div className="space-y-5">
       <DoctorsManagementHeader
@@ -47,7 +47,7 @@ export default async function DoctorsManagementPage({
       </div>
       <Suspense fallback={<TableSkeleton columns={10} rows={5} />}>
         <DoctorsTable
-          doctors={doctors?.data?.data}
+          doctors={doctors?.data}
           specialties={specialtiesResult?.data}
         ></DoctorsTable>
       </Suspense>

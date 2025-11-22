@@ -15,11 +15,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import useSpecialtySelection from "@/hooks/specialty/useSpecialtySelection";
 import { createDoctor, updateDoctor } from "@/services/admin/doctorManagement";
 import { IDoctor } from "@/types/doctor.interface";
 import { ISpecialty } from "@/types/specialty.interface";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import SpecialtyMultiSelect from "./SpecialtyMultiSelect";
+import Image from "next/image";
 
 interface IDoctorManagementDialogProps {
   open: boolean;
@@ -36,31 +39,69 @@ export default function DoctorsManagementDialog({
   specialties,
 }: IDoctorManagementDialogProps) {
   const isEdit = !!doctor;
-  const [selectedSpecialty, setSelectedSpecialty] = useState<string>("");
+  const formRef = useRef<HTMLFormElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [gender, setGender] = useState<"MALE" | "FEMALE">(
     doctor?.gender || "MALE"
   );
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [state, formAction, isPending] = useActionState(
     isEdit ? updateDoctor.bind(null, doctor.id!) : createDoctor,
     null
   );
+  console.log("from doctors dialog", state);
+  const specialtySelection = useSpecialtySelection({
+    doctor,
+    isEdit,
+    open,
+  });
+  const getSpecialtyTitle = (id: string) => {
+    return specialties?.find((s) => s.id === id)?.title || "unknown";
+  };
+  const handleFileChange = (e:React.ChangeEvent<HTMLInputElement>)=> {
+    const file = e.target.files?.[0];
+    setSelectedFile(file||null)
+  }
+ const handleClose = () => {
+   if (fileInputRef.current) {
+     fileInputRef.current.value = "";
+   }
+   if (selectedFile) {
+     setSelectedFile(null); // Clear preview
+   }
+   formRef.current?.reset(); // Clear form
+   onClose(); // Close dialog
+ };
   useEffect(() => {
     if (state && state.success) {
       toast.success(state.message || "update or created doctor successful");
+      if (formRef.current) {
+        formRef.current.reset()
+      }
       onSuccess();
       onClose();
     } else if (state && !state.success) {
       toast.error(state.message);
+      if (selectedFile && fileInputRef.current) {
+        const dataTransfer = new DataTransfer()
+        dataTransfer.items.add(selectedFile)
+        fileInputRef.current.files = dataTransfer.files;
+      }
     }
-  }, [state, onSuccess, onClose]);
+  }, [state, onSuccess, onClose,selectedFile]);
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-h-[90vh] flex flex-col p-0">
         <DialogHeader className="px-6 pt-6 pb-4">
           <DialogTitle>{isEdit ? "Edit Doctor" : "Add New Doctor"}</DialogTitle>
         </DialogHeader>
 
-        <form action={formAction} className="flex flex-col flex-1 min-h-0">
+        <form
+          ref={formRef}
+          action={formAction}
+          className="flex flex-col flex-1 min-h-0"
+        >
           <div className="flex-1 overflow-y-auto px-6 space-y-4 pb-4">
             <Field>
               <FieldLabel htmlFor="name">Name</FieldLabel>
@@ -68,7 +109,9 @@ export default function DoctorsManagementDialog({
                 id="name"
                 name="name"
                 placeholder="Dr. John Doe"
-                defaultValue={isEdit ? doctor?.name : undefined}
+                defaultValue={
+                  state?.formdata?.name || (isEdit ? doctor?.name : "")
+                }
               />
               <InputFieldError state={state} field="name" />
             </Field>
@@ -80,7 +123,9 @@ export default function DoctorsManagementDialog({
                 name="email"
                 type="email"
                 placeholder="doctor@example.com"
-                defaultValue={isEdit ? doctor?.email : undefined}
+                defaultValue={
+                  state?.formdata?.email || (isEdit ? doctor?.email : "")
+                }
                 disabled={isEdit}
               />
               <InputFieldError state={state} field="email" />
@@ -95,6 +140,7 @@ export default function DoctorsManagementDialog({
                     name="password"
                     type="password"
                     placeholder="Enter password"
+                    defaultValue={state?.formdata?.password || ""}
                   />
                   <InputFieldError state={state} field="password" />
                 </Field>
@@ -108,53 +154,29 @@ export default function DoctorsManagementDialog({
                     name="confirmPassword"
                     type="password"
                     placeholder="Confirm password"
+                    defaultValue={state?.formdata?.confirmPassword || ""}
                   />
                   <InputFieldError state={state} field="confirmPassword" />
                 </Field>
               </>
             )}
 
-            <Field>
-              <FieldLabel htmlFor="specialties">Specialty</FieldLabel>
-              <Input
-                id="specialties"
-                name="specialties"
-                placeholder="Select a specialty"
-                // defaultValue={isEdit ? doctor?.doctorSpecialties?.[0]?.specialties?.title : ""}
-                defaultValue={selectedSpecialty}
-                type="hidden"
-              />
-              <Select
-                value={
-                  //   isEdit
-                  //     ? doctor?.doctorSpecialties?.[0]?.specialties?.title || ""
-                  //     : selectedSpecialty
-                  selectedSpecialty
-                }
-                onValueChange={setSelectedSpecialty}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a specialty" />
-                </SelectTrigger>
-                <SelectContent>
-                  {specialties && specialties.length > 0 ? (
-                    specialties.map((specialty) => (
-                      <SelectItem key={specialty.id} value={specialty.title}>
-                        {specialty.title}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <SelectItem value="none" disabled>
-                      No specialties available
-                    </SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-gray-500 mt-1">
-                Select a specialty for the doctor
-              </p>
-              <InputFieldError state={state} field="specialties" />
-            </Field>
+            <SpecialtyMultiSelect
+              selectedSpecialtyIds={specialtySelection.selectedSpecialtyIds}
+              removedSpecialtyIds={specialtySelection.removedSpecialtyIds}
+              currentSpecialtyId={specialtySelection.currentSpecialtyId}
+              availableSpecialties={specialtySelection.getAvailableSpecialties(
+                specialties!
+              )}
+              isEdit={isEdit}
+              onCurrentSpecialtyChange={
+                specialtySelection.setCurrentSpecialtyId
+              }
+              onAddSpecialty={specialtySelection.handleAddSpecialty}
+              onRemoveSpecialty={specialtySelection.handleRemoveSpecialty}
+              getSpecialtyTitle={getSpecialtyTitle}
+              getNewSpecialties={specialtySelection.getNewSpecialties}
+            ></SpecialtyMultiSelect>
 
             <Field>
               <FieldLabel htmlFor="contactNumber">Contact Number</FieldLabel>
@@ -162,7 +184,10 @@ export default function DoctorsManagementDialog({
                 id="contactNumber"
                 name="contactNumber"
                 placeholder="+1234567890"
-                defaultValue={doctor?.contactNumber}
+                defaultValue={
+                  state?.formdata?.contactNumber ||
+                  (isEdit ? doctor?.contactNumber : "")
+                }
               />
               <InputFieldError state={state} field="contactNumber" />
             </Field>
@@ -173,7 +198,9 @@ export default function DoctorsManagementDialog({
                 id="address"
                 name="address"
                 placeholder="123 Main St, City, Country"
-                defaultValue={isEdit ? doctor?.address : undefined}
+                defaultValue={
+                  state?.formdata?.address || (isEdit ? doctor?.address : "")
+                }
               />
               <InputFieldError state={state} field="address" />
             </Field>
@@ -186,7 +213,10 @@ export default function DoctorsManagementDialog({
                 id="registrationNumber"
                 name="registrationNumber"
                 placeholder="REG123456"
-                defaultValue={isEdit ? doctor?.registrationNumber : undefined}
+                defaultValue={
+                  state?.formdata?.registrationNumber ||
+                  (isEdit ? doctor?.registrationNumber : "")
+                }
               />
               <InputFieldError state={state} field="registrationNumber" />
             </Field>
@@ -200,7 +230,10 @@ export default function DoctorsManagementDialog({
                 name="experience"
                 type="number"
                 placeholder="5"
-                defaultValue={isEdit ? doctor?.experience : undefined}
+                defaultValue={
+                  state?.formdata?.experience ||
+                  (isEdit ? doctor?.experience : "")
+                }
                 min="0"
               />
               <InputFieldError state={state} field="experience" />
@@ -237,7 +270,10 @@ export default function DoctorsManagementDialog({
                 name="appointmentFee"
                 type="number"
                 placeholder="100"
-                defaultValue={isEdit ? doctor?.appointmentFee : undefined}
+                defaultValue={
+                  state?.formdata?.appointmentFee ||
+                  (isEdit ? doctor?.appointmentFee : "")
+                }
                 min="0"
               />
               <InputFieldError state={state} field="appointmentFee" />
@@ -249,7 +285,10 @@ export default function DoctorsManagementDialog({
                 id="qualification"
                 name="qualification"
                 placeholder="MBBS, MD"
-                defaultValue={isEdit ? doctor?.qualification : undefined}
+                defaultValue={
+                  state?.formdata?.qualification ||
+                  (isEdit ? doctor?.qualification : "")
+                }
               />
               <InputFieldError state={state} field="qualification" />
             </Field>
@@ -262,7 +301,10 @@ export default function DoctorsManagementDialog({
                 id="currentWorkingPlace"
                 name="currentWorkingPlace"
                 placeholder="City Hospital"
-                defaultValue={isEdit ? doctor?.currentWorkingPlace : undefined}
+                defaultValue={
+                  state?.formdata?.currentWorkingPlace ||
+                  (isEdit ? doctor?.currentWorkingPlace : "")
+                }
               />
               <InputFieldError state={state} field="currentWorkingPlace" />
             </Field>
@@ -273,7 +315,10 @@ export default function DoctorsManagementDialog({
                 id="designation"
                 name="designation"
                 placeholder="Senior Consultant"
-                defaultValue={isEdit ? doctor?.designation : undefined}
+                defaultValue={
+                  state?.formdata?.designation ||
+                  (isEdit ? doctor?.designation : "")
+                }
               />
               <InputFieldError state={state} field="designation" />
             </Field>
@@ -281,11 +326,32 @@ export default function DoctorsManagementDialog({
             {!isEdit && (
               <Field>
                 <FieldLabel htmlFor="file">Profile Photo</FieldLabel>
-                <Input id="file" name="file" type="file" accept="image/*" />
+                {selectedFile && (
+                  <Image
+                    //get from state if available
+                    src={
+                      typeof selectedFile === "string"
+                        ? selectedFile
+                        : URL.createObjectURL(selectedFile)
+                    }
+                    alt="Profile Photo Preview"
+                    width={50}
+                    height={50}
+                    className="mb-2 rounded-full"
+                  />
+                )}
+                <Input
+                  ref={fileInputRef}
+                  id="file"
+                  name="file"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                />
                 <p className="text-xs text-gray-500 mt-1">
                   Upload a profile photo for the doctor
                 </p>
-                <InputFieldError state={state} field="file" />
+                <InputFieldError state={state} field="profilePhoto" />
               </Field>
             )}
           </div>
