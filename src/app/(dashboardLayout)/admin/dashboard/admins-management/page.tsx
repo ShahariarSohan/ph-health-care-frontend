@@ -16,7 +16,8 @@ export default async function AdminManagementPage({
   const searchParamsObj = await searchParams;
   const admins = await getAdmins(queryStringFormatter(searchParamsObj));
   const totalPages = Math.ceil(admins?.meta?.total / admins.meta?.limit);
-  const currentPage=admins?.meta?.page
+  const currentPage = admins?.meta?.page
+  
   return (
     <div className="space-y-5">
           <AdminsManagementHeader></AdminsManagementHeader>

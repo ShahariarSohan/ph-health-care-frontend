@@ -4,6 +4,7 @@
 import { serverFetch } from "@/lib/serverFetch";
 import zodValidator from "@/lib/zodValidator";
 import { IPatient } from "@/types/patient.interface";
+
 import { updatePatientZodSchema } from "@/zod/patient.validation";
 
 export const getPatients = async (queryString?: string) => {
@@ -42,6 +43,7 @@ export async function getPatientById(id: string) {
     };
   }
 }
+
 export const updatePatient = async (
   _prevState: any,
   formData: FormData
@@ -52,9 +54,9 @@ export const updatePatient = async (
       return { success: false, message: "Patient ID is missing" };
     }
     const payload: Partial<IPatient> = {
-       id : formData.get("id") as string,
       name: formData.get("name") as string,
-      address:formData.get("address") as string,
+      address: formData.get("address") as string,
+      contactNumber: formData.get("contactNumber") as string,
       };
       
     if (zodValidator(payload, updatePatientZodSchema).success === false) {

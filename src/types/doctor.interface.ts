@@ -1,3 +1,4 @@
+
 export interface IDoctor {
   id?: string;
   name: string;
@@ -12,12 +13,14 @@ export interface IDoctor {
   qualification: string;
   currentWorkingPlace: string;
   designation: string;
-  profilePhoto?: string;
+  profilePhoto?: File | string;
+  specialties?:string[]
   isDeleted?: boolean;
   averageRating?: number;
   createdAt?: string;
   updatedAt?: string;
   doctorSpecialties?: Array<{
+    specialtiesId: string;
     specialties?: {
       id: string;
       title: string;
