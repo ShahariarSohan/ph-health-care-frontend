@@ -21,11 +21,20 @@ export default function DoctorsManagementHeader({
       router.refresh();
     });
   };
+  const [dialogKey, setDialogKey] = useState(0)
+  const handleCloseDialog=()=>{
+    setIsDialogOpen(false)
+  }
+  const handleOpenDialog = () => {
+    setDialogKey(prev => prev + 1)
+    setIsDialogOpen(true)
+  }
   return (
     <>
       <DoctorsManagementDialog
+        key={dialogKey}
         open={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
+        onClose={handleCloseDialog}
         onSuccess={handleSuccess}
         specialties={specialties}
       />
@@ -36,7 +45,7 @@ export default function DoctorsManagementHeader({
         action={{
           label: "Add Doctor",
           icon: Plus,
-          onClick: () => setIsDialogOpen(true),
+          onClick: handleOpenDialog,
         }}
       />
     </>

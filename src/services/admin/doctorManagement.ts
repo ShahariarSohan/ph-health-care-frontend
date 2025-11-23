@@ -9,76 +9,77 @@ import {
 
 
 export const createDoctor = async (_prevState: any, formData: FormData) => {
+  const specialtiesString = formData.get("specialties") as string;
+  let specialties: string[] = [];
+  if (specialtiesString) {
+    try {
+      specialties = JSON.parse(specialtiesString);
+      if (!Array.isArray(specialties)) specialties = [];
+    } catch {
+      specialties = [];
+    }
+  }
+
+  const validationPayload: IDoctor = {
+    name: formData.get("name") as string,
+    email: formData.get("email") as string,
+    contactNumber: formData.get("contactNumber") as string,
+    address: formData.get("address") as string,
+    registrationNumber: formData.get("registrationNumber") as string,
+    experience: Number(formData.get("experience") as string),
+    gender: formData.get("gender") as "MALE" | "FEMALE",
+    appointmentFee: Number(formData.get("appointmentFee") as string),
+    qualification: formData.get("qualification") as string,
+    currentWorkingPlace: formData.get("currentWorkingPlace") as string,
+    designation: formData.get("designation") as string,
+    password: formData.get("password") as string,
+    profilePhoto: formData.get("file") as File,
+    specialties,
+  };
+  const validatedPayload = zodValidator(
+    validationPayload,
+    createDoctorZodSchema
+  );
+  if (!validatedPayload.success && validatedPayload.errors) {
+    return {
+      success: validatedPayload.success,
+      message: "Validation failed",
+      formdata: validationPayload,
+      errors: validatedPayload.errors,
+    };
+  }
+  if (!validatedPayload.data) {
+    return {
+      success: false,
+      message: "Validation failed",
+      formdata: validationPayload,
+    };
+  }
+  const newPayload = {
+    password: validatedPayload.data.password,
+    doctor: {
+      name: validatedPayload.data.name,
+      email: validatedPayload.data.email,
+      contactNumber: validatedPayload.data.contactNumber,
+      address: validatedPayload.data.address,
+      registrationNumber: validatedPayload.data.registrationNumber,
+      experience: validatedPayload.data.experience,
+      gender: validatedPayload.data.gender,
+      appointmentFee: validatedPayload.data.appointmentFee,
+      qualification: validatedPayload.data.qualification,
+      currentWorkingPlace: validatedPayload.data.currentWorkingPlace,
+      designation: validatedPayload.data.designation,
+      specialties: validatedPayload.data.specialties,
+    },
+  };
+  const newFormData = new FormData();
+  newFormData.append("data", JSON.stringify(newPayload));
+
+  if (formData.get("file")) {
+    newFormData.append("file", formData.get("file") as Blob);
+  }
   try {
-    const specialtiesString = formData.get("specialties") as string;
-    let specialties: string[] = [];
-    if (specialtiesString) {
-      try {
-        specialties = JSON.parse(specialtiesString);
-        if (!Array.isArray(specialties)) specialties = [];
-      } catch {
-        specialties = [];
-      }
-    }
-
-    const validationPayload: IDoctor = {
-      name: formData.get("name") as string,
-      email: formData.get("email") as string,
-      contactNumber: formData.get("contactNumber") as string,
-      address: formData.get("address") as string,
-      registrationNumber: formData.get("registrationNumber") as string,
-      experience: Number(formData.get("experience") as string),
-      gender: formData.get("gender") as "MALE" | "FEMALE",
-      appointmentFee: Number(formData.get("appointmentFee") as string),
-      qualification: formData.get("qualification") as string,
-      currentWorkingPlace: formData.get("currentWorkingPlace") as string,
-      designation: formData.get("designation") as string,
-      password: formData.get("password") as string,
-      profilePhoto: formData.get("file") as File,
-      specialties,
-    };
-    const validatedPayload = zodValidator(
-      validationPayload,
-      createDoctorZodSchema
-    );
-    if (!validatedPayload.success &&validatedPayload.errors) {
-      return {
-        success: validatedPayload.success,
-        message: "Validation failed",
-        formdata: validationPayload,
-        errors: validatedPayload.errors,
-      };
-    }
-    if (!validatedPayload.data) {
-      return {
-        success: false,
-        message: "Validation failed",
-        formdata: validationPayload,
-      };
-    }
-    const newPayload = {
-      password: validatedPayload.data.password,
-      doctor: {
-        name: validatedPayload.data.name,
-        email: validatedPayload.data.email,
-        contactNumber: validatedPayload.data.contactNumber,
-        address: validatedPayload.data.address,
-        registrationNumber: validatedPayload.data.registrationNumber,
-        experience: validatedPayload.data.experience,
-        gender: validatedPayload.data.gender,
-        appointmentFee: validatedPayload.data.appointmentFee,
-        qualification: validatedPayload.data.qualification,
-        currentWorkingPlace: validatedPayload.data.currentWorkingPlace,
-        designation: validatedPayload.data.designation,
-        specialties: validatedPayload.data.specialties,
-      },
-    };
-    const newFormData = new FormData();
-    newFormData.append("data", JSON.stringify(newPayload));
-
-    if (formData.get("file")) {
-      newFormData.append("file", formData.get("file") as Blob);
-    }
+    
     const res = await serverFetch.post("/user/create-doctor", {
       body: newFormData,
     });
@@ -92,7 +93,8 @@ export const createDoctor = async (_prevState: any, formData: FormData) => {
         process.env.NODE_ENV === "development"
           ? error.message
           : "Something went wrong"
-      }`,
+        }`,
+      formData:validationPayload
     };
   }
 };
@@ -137,31 +139,69 @@ export const updateDoctor = async (
   _prevState: any,
   formData: FormData
 ) => {
+  const validationPayload: Partial<IDoctor> = {
+    name: formData.get("name") as string,
+    contactNumber: formData.get("contactNumber") as string,
+    address: formData.get("address") as string,
+    registrationNumber: formData.get("registrationNumber") as string,
+    experience: Number(formData.get("experience") as string),
+    gender: formData.get("gender") as "MALE" | "FEMALE",
+    appointmentFee: Number(formData.get("appointmentFee") as string),
+    qualification: formData.get("qualification") as string,
+    currentWorkingPlace: formData.get("currentWorkingPlace") as string,
+    designation: formData.get("designation") as string,
+  };
+  const specialtiesValue = formData.get("specialties") as string;
+  if (specialtiesValue) {
+    
+    try {
+      const parsed = JSON.parse(specialtiesValue)
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        validationPayload.specialties=parsed
+      }
+    } catch {
+      console.log("parsed Specialties error")
+    }
+  }
+  const removeSpecialtiesValue = formData.get("removeSpecialties") as string;
+  if (removeSpecialtiesValue) {
+    try {
+      const parsed = JSON.parse(removeSpecialtiesValue)
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        validationPayload.removeSpecialties = parsed;
+      }
+    } catch {
+      console.log("parsed removeSpecialties error");
+    }
+  }
+
+   const validatedPayload = zodValidator(
+     validationPayload,
+     updateDoctorZodSchema
+   );
+   if (!validatedPayload.success && validatedPayload.errors) {
+     return {
+       success: validatedPayload.success,
+       message: "Validation failed",
+       formdata: validationPayload,
+       errors: validatedPayload.errors,
+     };
+   }
+   if (!validatedPayload.data) {
+     return {
+       success: false,
+       message: "Validation failed",
+       formdata: validationPayload,
+     };
+   }
   try {
-    const payload: Partial<IDoctor> = {
-      name: formData.get("name") as string,
-      contactNumber: formData.get("contactNumber") as string,
-      address: formData.get("address") as string,
-      registrationNumber: formData.get("registrationNumber") as string,
-      experience: Number(formData.get("experience") as string),
-      gender: formData.get("gender") as "MALE" | "FEMALE",
-      appointmentFee: Number(formData.get("appointmentFee") as string),
-      qualification: formData.get("qualification") as string,
-      currentWorkingPlace: formData.get("currentWorkingPlace") as string,
-      designation: formData.get("designation") as string,
-    };
-    if (zodValidator(payload, updateDoctorZodSchema).success === false) {
-      return zodValidator(payload, updateDoctorZodSchema);
-    }
-    const validatedPayload = zodValidator(payload, updateDoctorZodSchema).data;
-    if (!validatedPayload) {
-      throw new Error("Invalid payload");
-    }
+    
+   
     const res = await serverFetch.patch(`/doctor/${id}`, {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(validatedPayload),
+      body: JSON.stringify(validatedPayload.data),
     });
     const result = await res.json();
     return result;
@@ -173,7 +213,8 @@ export const updateDoctor = async (
         process.env.NODE_ENV === "development"
           ? error.message
           : "Something went wrong"
-      }`,
+        }`,
+      formData:validationPayload
     };
   }
 };
