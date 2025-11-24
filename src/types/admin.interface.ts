@@ -1,11 +1,10 @@
 export interface IAdmin {
   id?: string;
-  name: string;
   email: string;
-  password: string; // Create only
+  name: string;
+  profilePhoto?: string | null;
   contactNumber: string;
-  profilePhoto?: string;
-  isDeleted?: boolean;
-  createdAt?: string;
-  updatedAt?: string;
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
 }

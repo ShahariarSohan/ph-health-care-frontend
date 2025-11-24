@@ -1,51 +1,43 @@
+
+import AdminsFilter from "@/components/modules/admin/admins-management/AdminFilters";
 import AdminsManagementHeader from "@/components/modules/admin/admins-management/AdminsManagementHeader";
 import AdminsTable from "@/components/modules/admin/admins-management/AdminsTable";
-import RefreshButton from "@/components/shared/RefreshButton";
-import SearchFilter from "@/components/shared/SearchFilter";
 import TablePagination from "@/components/shared/TablePagination";
 import { TableSkeleton } from "@/components/shared/TableSkeleton";
 import { queryStringFormatter } from "@/lib/formatters";
 import { getAdmins } from "@/services/admin/adminManagement";
+
 import { Suspense } from "react";
 
-export default async function AdminManagementPage({
+const AdminAdminsManagementPage = async ({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
+}) => {
   const searchParamsObj = await searchParams;
-  const admins = await getAdmins(queryStringFormatter(searchParamsObj));
-  const totalPages = Math.ceil(admins?.meta?.total / admins.meta?.limit);
-  const currentPage = admins?.meta?.page
-  
-  return (
-    <div className="space-y-5">
-          <AdminsManagementHeader></AdminsManagementHeader>
-          <div className="flex items-center gap-2">
-            <SearchFilter
-              paramName="searchTerm"
-              placeholder="Search admins..."
-            ></SearchFilter>
-            {/* <SelectFilter
-              paramName="Specialty"
-              options={specialtiesResult?.data?.map((specialty: ISpecialty) => ({
-                label: specialty.title,
-                value: specialty.id,
-              }))}
-              placeholder="Filter by Specialty"
-            ></SelectFilter> */}
-            <RefreshButton></RefreshButton>
-          </div>
-          <Suspense fallback={<TableSkeleton columns={10} rows={5} />}>
-            <AdminsTable
-              admins={admins?.data}
-              
-            ></AdminsTable>
-          </Suspense>
-          <TablePagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-          ></TablePagination>
-        </div>
+  const queryString = queryStringFormatter(searchParamsObj);
+  const adminsResult = await getAdmins(queryString);
+
+  const totalPages = Math.ceil(
+    (adminsResult?.meta?.total || 1) / (adminsResult?.meta?.limit || 1)
   );
-}
+
+  return (
+    <div className="space-y-6">
+      <AdminsManagementHeader />
+
+      {/* Search, Filters */}
+      <AdminsFilter />
+
+      <Suspense fallback={<TableSkeleton columns={8} rows={10} />}>
+        <AdminsTable admins={adminsResult?.data || []} />
+        <TablePagination
+          currentPage={adminsResult?.meta?.page || 1}
+          totalPages={totalPages || 1}
+        />
+      </Suspense>
+    </div>
+  );
+};
+
+export default AdminAdminsManagementPage;
