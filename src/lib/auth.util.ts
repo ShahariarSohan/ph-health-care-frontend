@@ -10,10 +10,9 @@ export const authRoutes = [
   "/login",
   "/register",
   "/forget-password",
-  "/reset-password",
 ];
 export const commonProtectedRoute: RouteConfig = {
-  exact: ["/my-profile", "/settings","/change-password"],
+  exact: ["/my-profile", "/settings", "/change-password", "/reset-password"],
   patterns: [],
 };
 export const adminProtectedRoute: RouteConfig = {

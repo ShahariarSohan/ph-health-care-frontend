@@ -15,7 +15,7 @@ export const getCommonNavItems = (role: UserRole) => {
         },
         {
           title: "My Profile",
-          href: "my-profile",
+          href: "/my-profile",
           icon: "User",
           roles: [UserRole.ADMIN, UserRole.PATIENT, UserRole.DOCTOR],
         },
@@ -26,7 +26,7 @@ export const getCommonNavItems = (role: UserRole) => {
       items: [
         {
           title: "Change Password",
-          href: "change-password",
+          href: "/change-password",
           icon: "Settings",
           roles: [UserRole.ADMIN, UserRole.PATIENT, UserRole.DOCTOR],
         },

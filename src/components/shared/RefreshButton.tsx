@@ -20,7 +20,7 @@ export default function RefreshButton({
   const [isPending, startTransition] = useTransition();
   const handleRefresh = () => {
     startTransition(() => {
-      router.refresh();
+      router.push(window.location.pathname);
     });
   };
   return (
