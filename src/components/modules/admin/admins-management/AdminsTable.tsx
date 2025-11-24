@@ -1,90 +1,104 @@
-"use client"
-import ManagementTable from "@/components/shared/ManagementTable";
-import AdminsManagementDialog from "./AdminsManagementDialog";
-import AdminViewDetailDialog from "./AdminsViewDetailDialog";
+"use client";
+
 import DeleteConfirmationDialog from "@/components/shared/DeleteConfirmationDialog";
+import ManagementTable from "@/components/shared/ManagementTable";
+import { softDeleteAdmin } from "@/services/admin/adminManagement";
+
 import { IAdmin } from "@/types/admin.interface";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { adminsColumns } from "./AdminsColumn";
-import { deleteAdmin } from "@/services/admin/adminManagement";
 import { toast } from "sonner";
+import { adminsColumns } from "./AdminsColumn";
+import AdminFormDialog from "./AdminsFormDialog";
+import AdminViewDetailDialog from "./AdminsViewDetailDialog";
 
-
-interface IAdminsTableProps {
+interface AdminsTableProps {
   admins: IAdmin[];
- 
 }
-export default function AdminsTable({ admins }: IAdminsTableProps) {
-  const router = useRouter()
-  const [, startTransition] = useTransition()
-  const [deletingAdmin, setDeletingAdmin] = useState<IAdmin|null>(null)
-  const [viewAdmin, setViewAdmin] = useState<IAdmin | null>(null)
-  const [editAdmin, setEditAdmin] = useState<IAdmin | null>(null);
-  const [isDeleting,setIsDeleting]=useState(false)
+
+const AdminsTable = ({ admins }: AdminsTableProps) => {
+  const router = useRouter();
+  const [, startTransition] = useTransition();
+  const [deletingAdmin, setDeletingAdmin] = useState<IAdmin | null>(null);
+  const [viewingAdmin, setViewingAdmin] = useState<IAdmin | null>(null);
+  const [editingAdmin, setEditingAdmin] = useState<IAdmin | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const handleRefresh = () => {
     startTransition(() => {
-      router.refresh()
-    })
-  }
-  const handleView = (admin:IAdmin) => {
-    setViewAdmin(admin)
-  }
-  const handleEdit = (admin:IAdmin) => {
-    setEditAdmin(admin)
-  }
-  const handleDelete = (admin:IAdmin) => {
-    setDeletingAdmin(admin)
-  }
-  const confirmDelete =async () => {
+      router.refresh();
+    });
+  };
+
+  const handleView = (admin: IAdmin) => {
+    setViewingAdmin(admin);
+  };
+
+  const handleEdit = (admin: IAdmin) => {
+    setEditingAdmin(admin);
+  };
+
+  const handleDelete = (admin: IAdmin) => {
+    setDeletingAdmin(admin);
+  };
+
+  const confirmDelete = async () => {
     if (!deletingAdmin) return;
-    setIsDeleting(true)
-    const result = await deleteAdmin(deletingAdmin.id!)
-    setIsDeleting(false)
+
+    setIsDeleting(true);
+    const result = await softDeleteAdmin(deletingAdmin.id!);
+    setIsDeleting(false);
+
     if (result.success) {
-      
-      toast.success(result.message || "Admin deleted successfully")
-      setDeletingAdmin(null)
+      toast.success(result.message || "Admin deleted successfully");
+      setDeletingAdmin(null);
       handleRefresh();
+    } else {
+      toast.error(result.message || "Failed to delete admin");
     }
-    else {
-      toast.error(result.message || "Admin deletion failed");
-    }
-  }
+  };
+
   return (
     <>
       <ManagementTable
         data={admins}
         columns={adminsColumns}
-        onDelete={handleDelete}
         onView={handleView}
         onEdit={handleEdit}
+        onDelete={handleDelete}
         getRowKey={(admin) => admin.id!}
         emptyMessage="No admins found"
       />
-      <AdminsManagementDialog
-        open={!!editAdmin}
-        onClose={() => setEditAdmin(null)}
-        admin={editAdmin!}
+
+      {/* Edit Admin Form Dialog */}
+      <AdminFormDialog
+        open={!!editingAdmin}
+        onClose={() => setEditingAdmin(null)}
+        admin={editingAdmin!}
         onSuccess={() => {
-          setEditAdmin(null);
+          setEditingAdmin(null);
           handleRefresh();
         }}
       />
+
+      {/* View Admin Detail Dialog */}
       <AdminViewDetailDialog
-        open={!!viewAdmin}
-        onClose={() => setViewAdmin(null)}
-        admin={viewAdmin}
-      ></AdminViewDetailDialog>
+        open={!!viewingAdmin}
+        onClose={() => setViewingAdmin(null)}
+        admin={viewingAdmin}
+      />
+
       {/* Delete Confirmation Dialog */}
       <DeleteConfirmationDialog
         open={!!deletingAdmin}
         onOpenChange={(open) => !open && setDeletingAdmin(null)}
         onConfirm={confirmDelete}
-        title="Delete admin"
+        title="Delete Admin"
         description={`Are you sure you want to delete ${deletingAdmin?.name}? This action cannot be undone.`}
         isDeleting={isDeleting}
       />
     </>
   );
-}
+};
+
+export default AdminsTable;

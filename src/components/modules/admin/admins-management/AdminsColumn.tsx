@@ -4,10 +4,8 @@
 import DateCell from "@/components/shared/cell/DateCell";
 import StatusBadgeCell from "@/components/shared/cell/StatusBadgeCell";
 import UserInfoCell from "@/components/shared/cell/UserInfoCell";
-import {  IColumn } from "@/components/shared/ManagementTable";
+import { IColumn } from "@/components/shared/ManagementTable";
 import { IAdmin } from "@/types/admin.interface";
-
-
 
 export const adminsColumns: IColumn<IAdmin>[] = [
   {
@@ -19,8 +17,8 @@ export const adminsColumns: IColumn<IAdmin>[] = [
         photo={admin.profilePhoto}
       />
     ),
+    sortKey: "name",
   },
- 
   {
     header: "Contact",
     accessor: (admin) => (
@@ -29,7 +27,6 @@ export const adminsColumns: IColumn<IAdmin>[] = [
       </div>
     ),
   },
- 
   {
     header: "Status",
     accessor: (admin) => <StatusBadgeCell isDeleted={admin.isDeleted} />,
@@ -37,5 +34,6 @@ export const adminsColumns: IColumn<IAdmin>[] = [
   {
     header: "Joined",
     accessor: (admin) => <DateCell date={admin.createdAt} />,
+    sortKey: "createdAt",
   },
 ];
