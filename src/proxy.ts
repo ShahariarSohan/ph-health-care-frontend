@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { NextRequest } from "next/server";
 import {  UserRole } from "./types/userRole";
 
 import { JwtPayload } from "jsonwebtoken";
@@ -7,13 +7,26 @@ import jwt from "jsonwebtoken";
 import { getDefaultDashboardRoute, getRouteOwner, isAuthRoute } from "./lib/auth.util";
 import { deleteCookie, getCookie } from "./services/auth/tokenHandlers";
 import getUserInfo from "./services/auth/getUserInfo";
+import { getNewAccessToken } from "./services/auth/authService";
 
 
 // This function can be marked `async` if using `await` inside
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
+  const hasTokenRefreshParam = request.nextUrl.searchParams.has("tokenRefreshed")
+  if (hasTokenRefreshParam) {
+    const url = request.nextUrl.clone();
+    url.searchParams.delete("tokenRefreshed")
+    return NextResponse.redirect(url)
+  }
 
 
+  const tokenRefreshResult = await getNewAccessToken()
+  if (tokenRefreshResult?.tokenRefreshed) {
+    const url = request.nextUrl.clone();
+    url.searchParams.set("tokenRefreshed", "true");
+    return NextResponse.redirect(url)
+  }
   // const accessToken = request.cookies.get("accessToken")?.value || null;
   const accessToken=await getCookie("accessToken") ||null
   let userRole: UserRole | null = null;
