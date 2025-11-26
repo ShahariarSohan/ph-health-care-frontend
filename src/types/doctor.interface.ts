@@ -1,5 +1,14 @@
 import { IDoctorSchedule } from "./schedule.interface";
+export interface IDoctorSpecialties{
 
+    specialtiesId: string;
+    specialties?: {
+      id: string;
+      title: string;
+      icon?: string;
+    };
+ 
+}
 export interface IDoctor {
   id?: string;
   name: string;
@@ -21,14 +30,7 @@ export interface IDoctor {
   averageRating?: number;
   createdAt?: string;
   updatedAt?: string;
-  doctorSpecialties?: Array<{
-    specialitiesId: string;
-    specialties?: {
-      id: string;
-      title: string;
-      icon?: string;
-    };
-  }>;
+  doctorSpecialties?:IDoctorSpecialties[] ;
 
   doctorSchedules?: IDoctorSchedule[];
 }

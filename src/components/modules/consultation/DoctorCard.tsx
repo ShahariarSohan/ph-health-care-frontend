@@ -94,7 +94,7 @@ export default function DoctorCard({ doctor }: DoctorCard) {
             <div className="flex flex-wrap gap-1">
               {doctor.doctorSpecialties.slice(1, 3).map((specialty) => (
                 <Badge
-                  key={specialty.specialitiesId}
+                  key={specialty.specialtiesId}
                   variant="outline"
                   className="text-xs"
                 >
