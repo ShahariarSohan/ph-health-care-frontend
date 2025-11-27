@@ -29,23 +29,7 @@ export const createAppointment = async (appointmentData:IAppointmentFormData) =>
 }
 
 
-export const getMyAppointments = async (queryString?: string) => {
-    try {
-      const res = await serverFetch.get(`/appointment/my-appointment${queryString?`?${queryString}`:"?sortBy=createdAt&sortOrder=desc"}`
-      );
-      const result = await res.json();
-      return result;
-    } catch (err: any) {
-      console.log(err);
-      return {
-        success: false,
-        message:
-          process.env.NODE_ENV === "development"
-            ? err.message
-            : "Failed to book appointment",
-      };
-    }
-}
+
 
 
 export const  getAppointmentById=async(appointmentId: string)=> {
@@ -91,31 +75,3 @@ export const  getAppointmentById=async(appointmentId: string)=> {
   }
 }
 
-export const changeAppointmentStatus=async(
-  appointmentId: string,
-  status: string
-)=>{
-  try {
-    const response = await serverFetch.patch(
-      `/appointment/status/${appointmentId}`,
-      {
-        body: JSON.stringify({ status }),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    const result = await response.json();
-    return result;
-  } catch (error: any) {
-    console.error("Error changing appointment status:", error);
-    return {
-      success: false,
-      message:
-        process.env.NODE_ENV === "development"
-          ? error.message
-          : "Failed to change appointment status",
-    };
-  }
-}

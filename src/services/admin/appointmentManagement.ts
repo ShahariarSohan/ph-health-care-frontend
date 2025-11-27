@@ -33,7 +33,7 @@ export async function getAppointments(queryString?: string) {
  * GET APPOINTMENT BY ID
  * API: GET /appointment/:id
  */
-export async function getAppointmentById(id: string) {
+async function getAppointmentById(id: string) {
   try {
     const response = await serverFetch.get(`/appointment/${id}`);
     const result = await response.json();
