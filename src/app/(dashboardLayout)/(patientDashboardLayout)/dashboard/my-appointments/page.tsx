@@ -1,6 +1,6 @@
 
 import AppointmentsList from "@/components/modules/patient/AppointmentsList";
-import { getMyAppointments } from "@/services/patient/appointment.service";
+import { getMyAppointments } from "@/services/appointment/appointment.service";
 
 import { IAppointment } from "@/types/appointment.interface";
 
