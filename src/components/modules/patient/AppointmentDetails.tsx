@@ -5,14 +5,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import getStatusBadge from "@/lib/getStatusBadge";
-import { AppointmentStatus, IAppointment } from "@/types/appointment.interface";
 import { format } from "date-fns";
 import {
   AlertCircle,
   Calendar,
   CheckCircle2,
   Clock,
+  CreditCard,
+  Loader2,
   MapPin,
   Phone,
   Star,
@@ -21,22 +21,116 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import ReviewDialog from "./ReviewDialog";
 // import ReviewDialog from "./ReviewDialog";
+import { changeAppointmentStatus } from "@/services/patient/appointment.service";
+import { initiatePayment } from "@/services/payment/payment.service";
 
+import { toast } from "sonner";
+import AppointmentCountdown from "./AppointmentCountdown";
+import ReviewDialog from "./ReviewDialog";
+import { AppointmentStatus, IAppointment, PaymentStatus } from "@/types/appointment.interface";
 
 interface AppointmentDetailProps {
   appointment: IAppointment;
 }
 
-export default function AppointmentDetails ({ appointment }: AppointmentDetailProps)  {
+const AppointmentDetails = ({ appointment }: AppointmentDetailProps) => {
   const router = useRouter();
   const [showReviewDialog, setShowReviewDialog] = useState(false);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   const isCompleted = appointment.status === AppointmentStatus.COMPLETED;
-  const canReview = isCompleted && !appointment.review;
+  const isCanceled = appointment.status === AppointmentStatus.CANCELED;
+  const isScheduled = appointment.status === AppointmentStatus.SCHEDULED;
+  const canReview =
+    isCompleted &&
+    !appointment.review &&
+    appointment.paymentStatus === PaymentStatus.PAID;
+  const canCancel = isScheduled && !isCanceled;
 
-  
+  const handlePayNow = async () => {
+    setIsProcessingPayment(true);
+    try {
+      const result = await initiatePayment(appointment.id);
+
+      if (result.success && result.data?.paymentUrl) {
+        toast.success("Redirecting to payment...");
+        // Store return URL before redirecting to payment
+        sessionStorage.setItem(
+          "paymentReturnUrl",
+          "/dashboard/my-appointments"
+        );
+        window.location.replace(result.data.paymentUrl);
+      } else {
+        toast.error(result.message || "Failed to initiate payment");
+        setIsProcessingPayment(false);
+      }
+    } catch (error) {
+      toast.error("An error occurred while initiating payment");
+      setIsProcessingPayment(false);
+      console.error(error);
+    }
+  };
+
+  const handleCancelAppointment = async () => {
+    if (!confirm("Are you sure you want to cancel this appointment?")) {
+      return;
+    }
+
+    setIsCancelling(true);
+    try {
+      const result = await changeAppointmentStatus(
+        appointment.id,
+        AppointmentStatus.CANCELED
+      );
+
+      if (result.success) {
+        toast.success("Appointment cancelled successfully");
+        router.refresh();
+      } else {
+        toast.error(result.message || "Failed to cancel appointment");
+      }
+    } catch (error) {
+      toast.error("An error occurred while cancelling appointment");
+      console.error(error);
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
+  const getStatusBadge = (status: AppointmentStatus) => {
+    const statusConfig: Record<
+      AppointmentStatus,
+      { variant: any; label: string; className?: string }
+    > = {
+      [AppointmentStatus.SCHEDULED]: {
+        variant: "default",
+        label: "Scheduled",
+        className: "bg-blue-500 hover:bg-blue-600",
+      },
+      [AppointmentStatus.INPROGRESS]: {
+        variant: "secondary",
+        label: "In Progress",
+      },
+      [AppointmentStatus.COMPLETED]: {
+        variant: "default",
+        label: "Completed",
+        className: "bg-green-500 hover:bg-green-600",
+      },
+      [AppointmentStatus.CANCELED]: {
+        variant: "destructive",
+        label: "Canceled",
+      },
+    };
+
+    const config = statusConfig[status];
+    return (
+      <Badge variant={config.variant} className={config.className}>
+        {config.label}
+      </Badge>
+    );
+  };
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       {/* Header */}
@@ -49,9 +143,27 @@ export default function AppointmentDetails ({ appointment }: AppointmentDetailPr
             Complete information about your appointment
           </p>
         </div>
-        <Button variant="outline" onClick={() => router.back()}>
-          Back
-        </Button>
+        <div className="flex gap-2">
+          {canCancel && (
+            <Button
+              variant="destructive"
+              onClick={handleCancelAppointment}
+              disabled={isCancelling}
+            >
+              {isCancelling ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Cancelling...
+                </>
+              ) : (
+                "Cancel Appointment"
+              )}
+            </Button>
+          )}
+          <Button variant="outline" onClick={() => router.back()}>
+            Back
+          </Button>
+        </div>
       </div>
 
       {/* Review Notification - Only show if can review (completed but no review) */}
@@ -80,6 +192,46 @@ export default function AppointmentDetails ({ appointment }: AppointmentDetailPr
           </CardContent>
         </Card>
       )}
+
+      {/* Payment Required Alert - Show if completed but not paid */}
+      {!isCompleted &&
+        !appointment.review &&
+        appointment.paymentStatus === PaymentStatus.UNPAID && (
+          <Card className="border-red-200 bg-red-50">
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-red-600 mt-0.5" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-red-900">
+                    Payment Required to Review
+                  </h3>
+                  <p className="text-sm text-red-700 mt-1">
+                    Please complete the payment for this appointment before
+                    leaving a review.
+                  </p>
+                  <Button
+                    onClick={handlePayNow}
+                    disabled={isProcessingPayment}
+                    className="mt-3 bg-red-600 hover:bg-red-700"
+                    size="sm"
+                  >
+                    {isProcessingPayment ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <CreditCard className="mr-2 h-4 w-4" />
+                        Pay Now
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
       {/* Cannot Review Yet - Only show if not completed and no review */}
       {!isCompleted && !appointment.review && (
@@ -269,6 +421,21 @@ export default function AppointmentDetails ({ appointment }: AppointmentDetailPr
                       </p>
                     </div>
                   </div>
+
+                  {appointment.status === AppointmentStatus.SCHEDULED &&
+                    appointment.schedule.startDateTime && (
+                      <>
+                        <Separator className="bg-blue-200" />
+                        <div className="pt-2">
+                          <AppointmentCountdown
+                            appointmentDateTime={
+                              appointment.schedule.startDateTime
+                            }
+                            className="text-blue-700"
+                          />
+                        </div>
+                      </>
+                    )}
                 </div>
               </CardContent>
             </Card>
@@ -373,4 +540,4 @@ export default function AppointmentDetails ({ appointment }: AppointmentDetailPr
   );
 };
 
-;
+export default AppointmentDetails;
