@@ -1,56 +1,58 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use server";
 
-import { serverFetch } from "@/lib/serverFetch";
-import { IUserInfo } from "@/types/user.interface";
-import { getCookie } from "./tokenHandlers";
-import jwt, { JwtPayload } from "jsonwebtoken"
 
-const getUserInfo = async (): Promise<IUserInfo | any> => {
-  let userInfo: IUserInfo | any
-  
+import jwt, { JwtPayload } from "jsonwebtoken";
+import { getCookie } from "./tokenHandlers";
+import { IUserInfo } from "@/types/user.interface";
+import { serverFetch } from "@/lib/serverFetch";
+
+export const getUserInfo = async (): Promise<IUserInfo | any> => {
+  let userInfo: IUserInfo | any;
   try {
-    const res = await serverFetch.get("/auth/me", {
-      cache: "force-cache",next:{tags:["USERINFO"]}
+    const response = await serverFetch.get("/auth/me", {
+      next: { tags: ["user-info"], revalidate: 180 },
     });
-    const result = await res.json();
+
+    const result = await response.json();
+
     if (result.success) {
-      const accessToken = await getCookie("accessToken")
+      const accessToken = await getCookie("accessToken");
+
       if (!accessToken) {
-        throw new Error("No token found")
+        throw new Error("No access token found");
       }
+
       const verifiedToken = jwt.verify(
         accessToken,
-        process.env.ACCESS_TOKEN_SECRET as string
-      ) as JwtPayload
+        process.env.JWT_SECRET as string
+      ) as JwtPayload;
+
       userInfo = {
         name: verifiedToken.name || "Unknown User",
         email: verifiedToken.email,
         role: verifiedToken.role,
       };
     }
-    
-    
-     userInfo = {
+
+    userInfo = {
       name:
         result.data.admin?.name ||
-        result.data.patient?.name ||
         result.data.doctor?.name ||
-        result.data?.name ||
+        result.data.patient?.name ||
+        result.data.name ||
         "Unknown User",
-      ...result.data
+      ...result.data,
     };
 
     return userInfo;
-  } catch (err) {
-    console.log(err);
-       return {
-         id: "",
-         name: "Unknown User",
-         email: "",
-         role: "PATIENT",
-       };
+  } catch (error: any) {
+    console.log(error);
+    return {
+      id: "",
+      name: "Unknown User",
+      email: "",
+      role: "PATIENT",
+    };
   }
 };
-
-export default getUserInfo;
