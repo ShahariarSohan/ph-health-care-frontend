@@ -1,40 +1,109 @@
-
 "use server";
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { serverFetch } from "@/lib/serverFetch";
 import { IAppointmentFormData } from "@/types/appointment.interface";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
-export const createAppointment = async (appointmentData:IAppointmentFormData) => {
-    try { 
+import { revalidateTag } from "next/cache";
 
-        const res = await serverFetch.post(`/appointment`, {
-            body: JSON.stringify(appointmentData),
-            headers:{
-                "Content-Type":"application/json"
-            }
-        })
-        const result = await res.json();
-        return result
+export async function createAppointment(data: IAppointmentFormData) {
+  try {
+    const response = await serverFetch.post("/appointment", {
+      body: JSON.stringify(data),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
-    } catch (err: any) {
-        console.log(err)
-        return {
-          success: false,
-          message:
-            process.env.NODE_ENV === "development"
-              ? err.message
-              : "Failed to book appointment",
-        };
+    const result = await response.json();
+    if (result.success) {
+      revalidateTag("my-appointments", { expire: 0 });
+      revalidateTag("appointments-list", { expire: 0 });
+      revalidateTag("patient-dashboard-meta", { expire: 0 });
+      revalidateTag("admin-dashboard-meta", { expire: 0 });
+      revalidateTag("doctor-dashboard-meta", { expire: 0 });
     }
+
+    return result;
+  } catch (error: any) {
+    console.error("Error creating appointment:", error);
+    return {
+      success: false,
+      message:
+        process.env.NODE_ENV === "development"
+          ? error.message
+          : "Failed to book appointment",
+    };
+  }
 }
 
-
-
-
-
-export const  getAppointmentById=async(appointmentId: string)=> {
+export async function createAppointmentWithPayLater(
+  data: IAppointmentFormData
+) {
   try {
-    const response = await serverFetch.get("/appointment/my-appointment");
+    const response = await serverFetch.post("/appointment/pay-later", {
+      body: JSON.stringify(data),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    const result = await response.json();
+    if (result.success) {
+      revalidateTag("my-appointments", { expire: 0 });
+      revalidateTag("appointments-list", { expire: 0 });
+      revalidateTag("patient-dashboard-meta", { expire: 0 });
+      revalidateTag("admin-dashboard-meta", { expire: 0 });
+      revalidateTag("doctor-dashboard-meta", { expire: 0 });
+    }
+    return result;
+  } catch (error: any) {
+    console.error("Error creating appointment with pay later:", error);
+    return {
+      success: false,
+      message:
+        process.env.NODE_ENV === "development"
+          ? error.message
+          : "Failed to book appointment",
+    };
+  }
+}
+
+export async function getMyAppointments(queryString?: string) {
+  try {
+    const response = await serverFetch.get(
+      `/appointment/my-appointment${
+        queryString ? `?${queryString}` : "?sortBy=createdAt&sortOrder=desc"
+      }`,
+      {
+        next: {
+          tags: ["my-appointments"],
+          revalidate: 120,
+        },
+      }
+    );
+    const result = await response.json();
+    return result;
+  } catch (error: any) {
+    console.error("Error fetching appointments:", error);
+    return {
+      success: false,
+      data: [],
+      message:
+        process.env.NODE_ENV === "development"
+          ? error.message
+          : "Failed to fetch appointments",
+    };
+  }
+}
+
+export async function getAppointmentById(appointmentId: string) {
+  try {
+    const response = await serverFetch.get("/appointment/my-appointment", {
+      next: {
+        tags: ["my-appointments", `appointment-${appointmentId}`],
+        revalidate: 180,
+      },
+    });
     const result = await response.json();
 
     if (result.success && result.data) {
@@ -75,3 +144,41 @@ export const  getAppointmentById=async(appointmentId: string)=> {
   }
 }
 
+export async function changeAppointmentStatus(
+  appointmentId: string,
+  status: string
+) {
+  try {
+    const response = await serverFetch.patch(
+      `/appointment/status/${appointmentId}`,
+      {
+        body: JSON.stringify({ status }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const result = await response.json();
+
+    if (result.success) {
+      // Invalidate appointment caches
+      revalidateTag("my-appointments", { expire: 0 });
+      revalidateTag("appointments-list", { expire: 0 });
+      revalidateTag(`appointment-${appointmentId}`, { expire: 0 });
+      // Update dashboard for immediate status reflection
+      revalidateTag("patient-dashboard-meta", { expire: 0 });
+      revalidateTag("dashboard-meta", { expire: 0 });
+    }
+    return result;
+  } catch (error: any) {
+    console.error("Error changing appointment status:", error);
+    return {
+      success: false,
+      message:
+        process.env.NODE_ENV === "development"
+          ? error.message
+          : "Failed to change appointment status",
+    };
+  }
+}

@@ -1,4 +1,4 @@
-"use client";
+
 
 import { Avatar } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/formatters";

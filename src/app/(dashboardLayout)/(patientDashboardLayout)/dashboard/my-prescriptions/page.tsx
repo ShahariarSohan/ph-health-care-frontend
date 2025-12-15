@@ -1,7 +1,7 @@
 
 
 import PatientPrescriptionsList from "@/components/modules/patient/PatientPrescriptionList";
-import { getMyPrescriptions } from "@/services/prescription/prescription.service";
+import { getMyPrescriptions } from "@/services/patient/prescription.service";
 import { IPrescription } from "@/types/prescription.interface";
 
 export default async function MyPrescriptionsPage() {
