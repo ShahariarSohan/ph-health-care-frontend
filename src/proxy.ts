@@ -6,8 +6,9 @@ import { JwtPayload } from "jsonwebtoken";
 import jwt from "jsonwebtoken";
 import { getDefaultDashboardRoute, getRouteOwner, isAuthRoute } from "./lib/auth.util";
 import { deleteCookie, getCookie } from "./services/auth/tokenHandlers";
-import getUserInfo from "./services/auth/getUserInfo";
+
 import { getNewAccessToken } from "./services/auth/authService";
+import { getUserInfo } from "./services/auth/getUserInfo";
 
 
 // This function can be marked `async` if using `await` inside

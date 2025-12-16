@@ -10,7 +10,8 @@ import {
 } from "@/components/ui/dialog";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { createSpecialties } from "@/services/admin/specialtyManagement";
+import { createSpecialty } from "@/services/admin/specialtyManagement";
+
 
 import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
@@ -27,7 +28,7 @@ export default function SpecialtiesManagementDialog({
   onSuccess,
 }: ISpecialtiesManagementDialogProps) {
   const [state, formAction, isPending] = useActionState(
-    createSpecialties,
+    createSpecialty,
     null
   );
   useEffect(() => {

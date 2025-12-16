@@ -29,6 +29,7 @@ import { toast } from "sonner";
 import AppointmentCountdown from "./AppointmentCountdown";
 import ReviewDialog from "./ReviewDialog";
 import { AppointmentStatus, IAppointment, PaymentStatus } from "@/types/appointment.interface";
+import getStatusBadge from "@/components/shared/getStatusBadge";
 
 interface AppointmentDetailProps {
   appointment: IAppointment;
@@ -99,38 +100,7 @@ const AppointmentDetails = ({ appointment }: AppointmentDetailProps) => {
     }
   };
 
-  const getStatusBadge = (status: AppointmentStatus) => {
-    const statusConfig: Record<
-      AppointmentStatus,
-      { variant: any; label: string; className?: string }
-    > = {
-      [AppointmentStatus.SCHEDULED]: {
-        variant: "default",
-        label: "Scheduled",
-        className: "bg-blue-500 hover:bg-blue-600",
-      },
-      [AppointmentStatus.INPROGRESS]: {
-        variant: "secondary",
-        label: "In Progress",
-      },
-      [AppointmentStatus.COMPLETED]: {
-        variant: "default",
-        label: "Completed",
-        className: "bg-green-500 hover:bg-green-600",
-      },
-      [AppointmentStatus.CANCELED]: {
-        variant: "destructive",
-        label: "Canceled",
-      },
-    };
-
-    const config = statusConfig[status];
-    return (
-      <Badge variant={config.variant} className={config.className}>
-        {config.label}
-      </Badge>
-    );
-  };
+ 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       {/* Header */}

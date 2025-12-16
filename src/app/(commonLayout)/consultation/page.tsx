@@ -11,13 +11,14 @@ import { getSpecialties } from "@/services/admin/specialtyManagement";
 import { Suspense } from "react";
 
 // ISR: Revalidate every 10 minutes for doctor listings
-export const revalidate = 600;
+
 
 const ConsultationPage = async ({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) => {
+  }) => {
+  
   const searchParamsObj = await searchParams;
   const queryString = queryStringFormatter(searchParamsObj);
 

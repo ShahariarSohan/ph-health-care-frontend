@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import revalidate from "@/lib/revalidate";
 
 import { CheckCircle2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -13,7 +14,7 @@ const PaymentSuccessContent = () => {
 
   useEffect(() => {
     // Get return URL from session storage only on client
-   
+   revalidate("my-appointments")
     const storedUrl =
       sessionStorage.getItem("paymentReturnUrl") ||
       "/dashboard/my-appointments";
