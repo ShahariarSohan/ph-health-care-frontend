@@ -5,9 +5,10 @@ import { ISpecialty } from "@/types/specialty.interface";
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { deleteSpecialties } from "@/services/admin/specialtyManagement";
+
 import { toast } from "sonner";
 import { specialtiesColumns } from "./SpecialtiesColumn";
+import { deleteSpecialty } from "@/services/admin/specialtyManagement";
 
 interface ISpecialtyTableProps {
   specialties: ISpecialty[];
@@ -33,7 +34,7 @@ export default function SpecialtiesTable({
   const confirmDelete = async () => {
     if (!deletingSpecialty) return;
     setIsDeletingDialog(true);
-    const result = await deleteSpecialties(deletingSpecialty.id);
+    const result = await deleteSpecialty(deletingSpecialty.id);
     setIsDeletingDialog(false);
     if (result.success) {
       toast.success(result.message || "Specialty deleted successfully");

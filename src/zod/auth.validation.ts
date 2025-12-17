@@ -23,7 +23,7 @@ export const registerPatientValidationSchema = z
   });
 
 
-  export const loginValidationSchema = z.object({
+  export const loginValidationZodSchema = z.object({
     email: z.email("Invalid email address"),
     password: z
       .string()

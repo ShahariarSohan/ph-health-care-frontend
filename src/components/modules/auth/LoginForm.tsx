@@ -1,63 +1,83 @@
-/* eslint-disable react/no-unescaped-entities */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
+
 import InputFieldError from "@/components/shared/InputFieldError";
 import { Button } from "@/components/ui/button";
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-
-import loginUser from "@/services/auth/loginUser";
-import Link from "next/link";
+import {loginUser} from "@/services/auth/loginUser";
 import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
 
-export default function LoginForm({redirect}:{redirect?:string}) {
+
+
+
+
+const LoginForm = ({ redirect }: { redirect?: string }) => {
   const [state, formAction, isPending] = useActionState(loginUser, null);
-  
+
   useEffect(() => {
-    if (state && !state.success) {
-      toast.error(state.message)
+    if (state && !state.success && state.message) {
+      toast.error(state.message);
     }
-  },[state])
+  }, [state]);
+
   return (
-    <div>
-      <form action={formAction}>
-        {redirect && <Input   type="hidden" name="redirect" value={redirect}/>}
-        <FieldGroup>
+    <form action={formAction}>
+      {redirect && <input type="hidden" name="redirect" value={redirect} />}
+      <FieldGroup>
+        <div className="grid grid-cols-1 gap-4">
+          {/* Email */}
           <Field>
             <FieldLabel htmlFor="email">Email</FieldLabel>
             <Input
               id="email"
-              type="email"
               name="email"
+              type="email"
               placeholder="m@example.com"
-              required
+              //   required
             />
-            <InputFieldError field="email" state={state}></InputFieldError>
+
+            <InputFieldError field="email" state={state} />
           </Field>
 
+          {/* Password */}
           <Field>
             <FieldLabel htmlFor="password">Password</FieldLabel>
-            <Input id="password" type="password" name="password" required  />
-            <InputFieldError field="password" state={state}></InputFieldError>
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              placeholder="Enter your password"
+              //   required
+            />
+            <InputFieldError field="password" state={state} />
           </Field>
-          <FieldGroup>
-            <Field>
-              <Button type="submit" disabled={isPending}>
-                {isPending ? "Logging in ...." : "Login"}
-              </Button>
-              <FieldDescription className="px-6 text-center">
-                Doesn't have an account? <Link href="/register">Register</Link>
-              </FieldDescription>
-            </Field>
-          </FieldGroup>
+        </div>
+        <FieldGroup className="mt-4">
+          <Field>
+            <Button type="submit" disabled={isPending}>
+              {isPending ? "Logging in..." : "Login"}
+            </Button>
+
+            <FieldDescription className="px-6 text-center">
+              Don&apos;t have an account?{" "}
+              <a href="/register" className="text-blue-600 hover:underline">
+                Sign up
+              </a>
+            </FieldDescription>
+            <FieldDescription className="px-6 text-center">
+              <a
+                href="/forgot-password"
+                className="text-blue-600 hover:underline"
+              >
+                Forgot password?
+              </a>
+            </FieldDescription>
+          </Field>
         </FieldGroup>
-      </form>
-    </div>
+      </FieldGroup>
+    </form>
   );
-}
+};
+
+export default LoginForm;

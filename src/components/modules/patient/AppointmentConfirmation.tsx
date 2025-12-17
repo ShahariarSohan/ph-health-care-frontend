@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { createAppointment } from "@/services/patient/appointment.service";
+import { createAppointment, createAppointmentWithPayLater } from "@/services/patient/appointment.service";
 
 import { IDoctor } from "@/types/doctor.interface";
 import { ISchedule } from "@/types/schedule.interface";
@@ -11,6 +11,7 @@ import {
   Calendar,
   CheckCircle2,
   Clock,
+  CreditCard,
   Loader2,
   MapPin,
   Phone,
@@ -34,32 +35,68 @@ export default function AppointmentConfirmation({
 
     const router = useRouter()
     const [isBooking, setIsBooking] = useState(false)
-    const [bookingSuccess, setBookingSuccess] = useState(false)
+  const [bookingSuccess, setBookingSuccess] = useState(false)
+  const [isPayingNow, setIsPayingNow] = useState(false)
+  const [isPayingLater, setIsPayingLater] = useState(false);
     
     const handleConfirmBooking = async () => {
         
-        setIsBooking(true)
+        setIsPayingNow(true)
 
 
         try {
             const result = await createAppointment({ doctorId: doctor.id!, scheduleId: schedule.id })
-            if (result.success) {
-                setBookingSuccess(true)
-                toast.success("Appointment booked successfully")
-                setTimeout(() => {
-                    router.push("/dashboard/my-appointments")
-                }, 2000)
+            if (result.success&&result.data?.paymentUrl) {
                 
+              toast.success("Redirecting to payment...")
+              window.location.replace(result.data.paymentUrl)
+               
+                
+            } else if(result.success) {
+              setBookingSuccess(true)
+                toast.error("Appointment bookend successfully")
+                 setTimeout(() => {
+                   router.push("/dashboard/my-appointments");
+                 }, 2000);
             } else {
-                toast.error(result.message || "Booking appointment failed")
-                setIsBooking(false)
+              toast.error(result.message || "Failed to book appointment");
+              setIsPayingNow(false)
             }
         } catch (err) {
             toast.error("An error occurred")
-            setIsBooking(false)
+            setIsPayingNow(false)
             console.log(err)
         }
+  }
+  const handlePayLater = async () => {
+    setIsPayingLater(true);
+
+    try {
+      const result = await createAppointmentWithPayLater({
+        doctorId: doctor.id!,
+        scheduleId: schedule.id,
+      });
+
+      if (result.success) {
+        setBookingSuccess(true);
+        toast.success(
+          "Appointment booked! You can pay later from your appointments page."
+        );
+
+        // Redirect after 2 seconds
+        setTimeout(() => {
+          router.push("/dashboard/my-appointments");
+        }, 2000);
+      } else {
+        toast.error(result.message || "Failed to book appointment");
+        setIsPayingLater(false);
+      }
+    } catch (error) {
+      toast.error("An error occurred while booking the appointment");
+      setIsPayingLater(false);
+      console.error(error);
     }
+  };
  if (bookingSuccess) {
     return (
       <div className="max-w-2xl mx-auto">
@@ -279,21 +316,41 @@ export default function AppointmentConfirmation({
                 className="w-full"
                 size="lg"
               >
-                {isBooking ? (
+                {isPayingNow ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Booking...
+                    Processing Payment...
                   </>
                 ) : (
                   <>
-                    <CheckCircle2 className="mr-2 h-4 w-4" />
-                    Confirm & Book Appointment
+                    <CreditCard className="mr-2 h-4 w-4" />
+                    Pay Now & Book Appointment
                   </>
                 )}
               </Button>
 
               <Button
+                onClick={handlePayLater}
+                disabled={isBooking}
                 variant="outline"
+                className="w-full"
+                size="lg"
+              >
+                {isPayingLater ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Booking Appointment...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                    Book Now, Pay Later
+                  </>
+                )}
+              </Button>
+
+              <Button
+                variant="ghost"
                 onClick={() => router.back()}
                 disabled={isBooking}
                 className="w-full"

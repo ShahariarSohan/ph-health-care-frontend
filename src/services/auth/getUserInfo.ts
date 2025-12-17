@@ -25,7 +25,7 @@ export const getUserInfo = async (): Promise<IUserInfo | any> => {
 
       const verifiedToken = jwt.verify(
         accessToken,
-        process.env.JWT_SECRET as string
+        process.env.ACCESS_TOKEN_SECRET as string
       ) as JwtPayload;
 
       userInfo = {
