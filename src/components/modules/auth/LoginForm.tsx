@@ -4,7 +4,7 @@ import InputFieldError from "@/components/shared/InputFieldError";
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import loginUser from "@/services/auth/loginUser";
+import {loginUser} from "@/services/auth/loginUser";
 import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
 

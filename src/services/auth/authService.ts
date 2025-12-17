@@ -15,7 +15,8 @@ import { changePasswordSchema } from "./../../zod/auth.validation";
 import { deleteCookie, getCookie, setCookie } from "./tokenHandlers";
 import { serverFetch } from "@/lib/serverFetch";
 import zodValidator from "@/lib/zodValidator";
-import verifiedAccessToken from "@/lib/jwtHandlers";
+import { verifiedAccessToken } from "@/lib/jwtHandlers";
+
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export async function updateMyProfile(formData: FormData) {

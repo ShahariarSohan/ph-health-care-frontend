@@ -15,80 +15,96 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import useSpecialtySelection from "@/hooks/specialty/useSpecialtySelection";
+
 import { createDoctor, updateDoctor } from "@/services/admin/doctorManagement";
 import { IDoctor } from "@/types/doctor.interface";
-import { ISpecialty } from "@/types/specialty.interface";
+
+import Image from "next/image";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import SpecialtyMultiSelect from "./SpecialtyMultiSelect";
-import Image from "next/image";
+import useSpecialtySelection from "@/hooks/specialty/useSpecialtySelection";
+import { ISpecialty } from "@/types/specialty.interface";
 
-interface IDoctorManagementDialogProps {
+interface IDoctorFormDialogProps {
   open: boolean;
   onClose: () => void;
   onSuccess: () => void;
   doctor?: IDoctor;
   specialties?: ISpecialty[];
 }
-export default function DoctorsManagementDialog({
+
+const DoctorsManagementDialog = ({
   open,
   onClose,
   onSuccess,
   doctor,
   specialties,
-}: IDoctorManagementDialogProps) {
-  const isEdit = !!doctor;
+}: IDoctorFormDialogProps) => {
   const formRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isEdit = !!doctor;
+
   const [gender, setGender] = useState<"MALE" | "FEMALE">(
     doctor?.gender || "MALE"
   );
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [state, formAction, isPending] = useActionState(
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    setSelectedFile(file || null);
+  };
+
+  const [state, formAction, pending] = useActionState(
     isEdit ? updateDoctor.bind(null, doctor.id!) : createDoctor,
     null
   );
-  console.log("from doctors dialog", state);
+
+  const prevStateRef = useRef(state);
+
+  const handleClose = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+    if (selectedFile) {
+      setSelectedFile(null); // Clear preview
+    }
+    formRef.current?.reset(); // Clear form
+    onClose(); // Close dialog
+  };
+
   const specialtySelection = useSpecialtySelection({
     doctor,
     isEdit,
     open,
   });
-  const getSpecialtyTitle = (id: string) => {
-    return specialties?.find((s) => s.id === id)?.title || "unknown";
+
+  const getSpecialtyTitle = (id: string): string => {
+    return specialties?.find((s) => s.id === id)?.title || "Unknown";
   };
-  const handleFileChange = (e:React.ChangeEvent<HTMLInputElement>)=> {
-    const file = e.target.files?.[0];
-    setSelectedFile(file||null)
-  }
- const handleClose = () => {
-   if (fileInputRef.current) {
-     fileInputRef.current.value = "";
-   }
-   if (selectedFile) {
-     setSelectedFile(null); // Clear preview
-   }
-   formRef.current?.reset(); // Clear form
-   onClose(); // Close dialog
- };
+
   useEffect(() => {
-    if (state && state.success) {
-      toast.success(state.message || "update or created doctor successful");
+    if (state === prevStateRef.current) return;
+    prevStateRef.current = state;
+
+    if (state?.success) {
+      toast.success(state.message);
       if (formRef.current) {
-        formRef.current.reset()
+        formRef.current.reset();
       }
       onSuccess();
       onClose();
-    } else if (state && !state.success) {
+    } else if (state && !state.success && state.message) {
       toast.error(state.message);
+
       if (selectedFile && fileInputRef.current) {
-        const dataTransfer = new DataTransfer()
-        dataTransfer.items.add(selectedFile)
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(selectedFile);
         fileInputRef.current.files = dataTransfer.files;
       }
     }
-  }, [state, onSuccess, onClose,selectedFile]);
+  }, [state, onSuccess, onClose, selectedFile]);
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -110,7 +126,7 @@ export default function DoctorsManagementDialog({
                 name="name"
                 placeholder="Dr. John Doe"
                 defaultValue={
-                  state?.formdata?.name || (isEdit ? doctor?.name : "")
+                  state?.formData?.name || (isEdit ? doctor?.name : "")
                 }
               />
               <InputFieldError state={state} field="name" />
@@ -123,8 +139,9 @@ export default function DoctorsManagementDialog({
                 name="email"
                 type="email"
                 placeholder="doctor@example.com"
+                // defaultValue={isEdit ? doctor?.email : undefined}
                 defaultValue={
-                  state?.formdata?.email || (isEdit ? doctor?.email : "")
+                  state?.formData?.email || (isEdit ? doctor?.email : "")
                 }
                 disabled={isEdit}
               />
@@ -139,8 +156,8 @@ export default function DoctorsManagementDialog({
                     id="password"
                     name="password"
                     type="password"
+                    defaultValue={state?.formData?.password || ""}
                     placeholder="Enter password"
-                    defaultValue={state?.formdata?.password || ""}
                   />
                   <InputFieldError state={state} field="password" />
                 </Field>
@@ -153,14 +170,15 @@ export default function DoctorsManagementDialog({
                     id="confirmPassword"
                     name="confirmPassword"
                     type="password"
+                    defaultValue={state?.formData?.confirmPassword || ""}
                     placeholder="Confirm password"
-                    defaultValue={state?.formdata?.confirmPassword || ""}
                   />
                   <InputFieldError state={state} field="confirmPassword" />
                 </Field>
               </>
             )}
 
+            {/* Specialty Selection */}
             <SpecialtyMultiSelect
               selectedSpecialtyIds={specialtySelection.selectedSpecialtyIds}
               removedSpecialtyIds={specialtySelection.removedSpecialtyIds}
@@ -176,7 +194,8 @@ export default function DoctorsManagementDialog({
               onRemoveSpecialty={specialtySelection.handleRemoveSpecialty}
               getSpecialtyTitle={getSpecialtyTitle}
               getNewSpecialties={specialtySelection.getNewSpecialties}
-            ></SpecialtyMultiSelect>
+            />
+            <InputFieldError field="specialties" state={state} />
 
             <Field>
               <FieldLabel htmlFor="contactNumber">Contact Number</FieldLabel>
@@ -184,8 +203,9 @@ export default function DoctorsManagementDialog({
                 id="contactNumber"
                 name="contactNumber"
                 placeholder="+1234567890"
+                // defaultValue={doctor?.contactNumber}
                 defaultValue={
-                  state?.formdata?.contactNumber ||
+                  state?.formData?.contactNumber ||
                   (isEdit ? doctor?.contactNumber : "")
                 }
               />
@@ -198,8 +218,9 @@ export default function DoctorsManagementDialog({
                 id="address"
                 name="address"
                 placeholder="123 Main St, City, Country"
+                // defaultValue={isEdit ? doctor?.address : undefined}
                 defaultValue={
-                  state?.formdata?.address || (isEdit ? doctor?.address : "")
+                  state?.formData?.address || (isEdit ? doctor?.address : "")
                 }
               />
               <InputFieldError state={state} field="address" />
@@ -213,8 +234,9 @@ export default function DoctorsManagementDialog({
                 id="registrationNumber"
                 name="registrationNumber"
                 placeholder="REG123456"
+                // defaultValue={isEdit ? doctor?.registrationNumber : undefined}
                 defaultValue={
-                  state?.formdata?.registrationNumber ||
+                  state?.formData?.registrationNumber ||
                   (isEdit ? doctor?.registrationNumber : "")
                 }
               />
@@ -230,8 +252,9 @@ export default function DoctorsManagementDialog({
                 name="experience"
                 type="number"
                 placeholder="5"
+                // defaultValue={isEdit ? doctor?.experience : undefined}
                 defaultValue={
-                  state?.formdata?.experience ||
+                  state?.formData?.experience ||
                   (isEdit ? doctor?.experience : "")
                 }
                 min="0"
@@ -246,6 +269,9 @@ export default function DoctorsManagementDialog({
                 name="gender"
                 placeholder="Select gender"
                 defaultValue={gender}
+                // defaultValue={
+                //   state?.formData?.gender || (isEdit ? doctor?.gender : "")
+                // }
                 type="hidden"
               />
               <Select
@@ -270,10 +296,7 @@ export default function DoctorsManagementDialog({
                 name="appointmentFee"
                 type="number"
                 placeholder="100"
-                defaultValue={
-                  state?.formdata?.appointmentFee ||
-                  (isEdit ? doctor?.appointmentFee : "")
-                }
+                defaultValue={isEdit ? doctor?.appointmentFee : undefined}
                 min="0"
               />
               <InputFieldError state={state} field="appointmentFee" />
@@ -285,8 +308,9 @@ export default function DoctorsManagementDialog({
                 id="qualification"
                 name="qualification"
                 placeholder="MBBS, MD"
+                // defaultValue={isEdit ? doctor?.qualification : undefined}
                 defaultValue={
-                  state?.formdata?.qualification ||
+                  state?.formData?.qualification ||
                   (isEdit ? doctor?.qualification : "")
                 }
               />
@@ -301,8 +325,9 @@ export default function DoctorsManagementDialog({
                 id="currentWorkingPlace"
                 name="currentWorkingPlace"
                 placeholder="City Hospital"
+                // defaultValue={isEdit ? doctor?.currentWorkingPlace : undefined}
                 defaultValue={
-                  state?.formdata?.currentWorkingPlace ||
+                  state?.formData?.currentWorkingPlace ||
                   (isEdit ? doctor?.currentWorkingPlace : "")
                 }
               />
@@ -315,8 +340,9 @@ export default function DoctorsManagementDialog({
                 id="designation"
                 name="designation"
                 placeholder="Senior Consultant"
+                // defaultValue={isEdit ? doctor?.designation : undefined}
                 defaultValue={
-                  state?.formdata?.designation ||
+                  state?.formData?.designation ||
                   (isEdit ? doctor?.designation : "")
                 }
               />
@@ -361,12 +387,12 @@ export default function DoctorsManagementDialog({
               type="button"
               variant="outline"
               onClick={onClose}
-              disabled={isPending}
+              disabled={pending}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending
+            <Button type="submit" disabled={pending}>
+              {pending
                 ? "Saving..."
                 : isEdit
                 ? "Update Doctor"
@@ -377,4 +403,6 @@ export default function DoctorsManagementDialog({
       </DialogContent>
     </Dialog>
   );
-}
+};
+
+export default DoctorsManagementDialog;
